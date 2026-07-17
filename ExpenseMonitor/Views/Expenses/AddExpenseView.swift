@@ -1,0 +1,317 @@
+//
+//  AddExpenseView.swift
+//  ExpenseMonitor
+//
+
+import SwiftUI
+
+struct AddExpenseView: View {
+    let repository: ExpenseRepository
+    let categoryRepository: CategoryRepository
+    var existingExpense: Expense? = nil
+    var onSave: (() -> Void)? = nil
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title = ""
+    @State private var amountText = "0"
+    @State private var categories: [Category] = []
+    @State private var selectedType: CategoryType = .expense
+    @State private var selectedCategory: Category?
+    @State private var date = Date()
+    @State private var isDatePickerPresented = false
+    @State private var isCreateCategoryPresented = false
+
+    private let categoryGridColumns = Array(repeating: GridItem(.flexible()), count: 4)
+    private let keypadColumns = Array(repeating: GridItem(.flexible()), count: 4)
+    private let keypadKeys = [
+        "7", "8", "9", "today",
+        "4", "5", "6", "⌫",
+        "1", "2", "3", "",
+        ".", "0", "", "check"
+    ]
+
+    private var filteredCategories: [Category] {
+        categories.filter { $0.type == selectedType }
+    }
+
+    private var isValid: Bool {
+        guard let amount = Double(amountText) else { return false }
+        return !title.isEmpty && amount > 0 && selectedCategory != nil
+    }
+
+    private var dateLabel: String {
+        Calendar.current.isDateInToday(date) ? "Today" : date.formatted(date: .abbreviated, time: .omitted)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                Spacer()
+                Text(existingExpense == nil ? "Add" : "Edit")
+                    .font(.headline)
+                Spacer()
+                Image(systemName: "dollarsign.arrow.circlepath")
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+
+            Picker("", selection: $selectedType) {
+                Text("Expense").tag(CategoryType.expense)
+                Text("Income").tag(CategoryType.income)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.bottom, 12)
+
+            ScrollView {
+                LazyVGrid(columns: categoryGridColumns, spacing: 16) {
+                    ForEach(filteredCategories) { category in
+                        categoryChip(category)
+                    }
+                    newCategoryTile
+                }
+                .padding()
+            }
+
+            if selectedCategory != nil {
+                expenseFormPanel
+                    .padding(.horizontal)
+                    .padding(.bottom, 12)
+            }
+        }
+        .background(Color(.systemGroupedBackground))
+        .onAppear {
+            categories = categoryRepository.fetchAll()
+            if let existingExpense {
+                title = existingExpense.title
+                amountText = formattedAmount(existingExpense.amount)
+                selectedType = existingExpense.type
+                date = existingExpense.expenseDate
+                selectedCategory = categories.first { $0.name == existingExpense.category }
+            }
+        }
+        .onChange(of: selectedType) { _, _ in
+            if selectedCategory?.type != selectedType {
+                selectedCategory = nil
+            }
+        }
+        .fullScreenCover(isPresented: $isCreateCategoryPresented) {
+            CreateCategoryView(categoryRepository: categoryRepository, initialType: selectedType) { newCategory in
+                categories.append(newCategory)
+                selectedCategory = newCategory
+            }
+        }
+        .sheet(isPresented: $isDatePickerPresented) {
+            DatePicker("Date", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .padding()
+                .presentationDetents([.medium])
+        }
+    }
+
+    private var expenseFormPanel: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Spacer()
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("₹")
+                        .font(.title2.bold())
+                        .foregroundStyle(Color(.systemBlue))
+                    Text(amountText)
+                        .font(.system(size: 40, weight: .bold))
+                }
+                Spacer()
+            }
+
+            TextField("Note", text: $title)
+                .padding(12)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            LazyVGrid(columns: keypadColumns, spacing: 12) {
+                ForEach(Array(keypadKeys.enumerated()), id: \.offset) { _, key in
+                    keypadButton(key)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private func keypadButton(_ key: String) -> some View {
+        switch key {
+        case "":
+            Color.clear
+                .frame(height: 48)
+        case "today":
+            Button {
+                isDatePickerPresented = true
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "calendar")
+                    Text(dateLabel)
+                        .font(.caption2)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(Color(.systemGray6))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+        case "check":
+            Button {
+                save()
+            } label: {
+                Image(systemName: "checkmark")
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(isValid ? Color(.systemGreen) : Color(.systemGray4))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isValid)
+        default:
+            Button {
+                keypadTapped(key)
+            } label: {
+                Text(key)
+                    .font(.title2.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(Color(.systemGray6))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func formattedAmount(_ amount: Double) -> String {
+        amount.truncatingRemainder(dividingBy: 1) == 0
+            ? String(Int(amount))
+            : String(amount)
+    }
+
+    private func keypadTapped(_ key: String) {
+        switch key {
+        case "⌫":
+            if amountText.count > 1 {
+                amountText.removeLast()
+            } else {
+                amountText = "0"
+            }
+        case ".":
+            if !amountText.contains(".") {
+                amountText += "."
+            }
+        default:
+            if let dotIndex = amountText.firstIndex(of: ".") {
+                let decimalsTyped = amountText.distance(from: amountText.index(after: dotIndex), to: amountText.endIndex)
+                if decimalsTyped >= 2 { return }
+            }
+            amountText = (amountText == "0") ? key : amountText + key
+        }
+    }
+
+    private func categoryChip(_ category: Category) -> some View {
+        let isSelected = selectedCategory?.id == category.id
+        return VStack(spacing: 6) {
+            Image(systemName: category.icon)
+                .font(.title3)
+                .foregroundStyle(isSelected ? .white : category.swiftUIColor)
+                .frame(width: 56, height: 56)
+                .background(isSelected ? category.swiftUIColor : category.swiftUIColor.opacity(0.15))
+                .clipShape(Circle())
+            Text(category.name)
+                .font(.caption)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            withAnimation {
+                selectedCategory = category
+            }
+        }
+    }
+
+    private var newCategoryTile: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "plus")
+                .foregroundStyle(.secondary)
+                .frame(width: 56, height: 56)
+                .overlay(
+                    Circle()
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                        .foregroundStyle(Color(.systemGray3))
+                )
+            Text("New")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isCreateCategoryPresented = true
+        }
+    }
+
+    private func save() {
+        guard let amount = Double(amountText), let selectedCategory else { return }
+
+        if let existingExpense {
+            existingExpense.title = title
+            existingExpense.amount = amount
+            existingExpense.category = selectedCategory.name
+            existingExpense.type = selectedCategory.type
+            existingExpense.expenseDate = date
+            existingExpense.categoryIcon = selectedCategory.icon
+            existingExpense.categoryColorName = selectedCategory.colorName
+            existingExpense.lastModified = Date()
+            repository.update(existingExpense)
+        } else {
+            let newExpense = Expense(
+                id: UUID().uuidString,
+                title: title,
+                amount: amount,
+                category: selectedCategory.name,
+                type: selectedCategory.type,
+                expenseDate: date,
+                note: nil,
+                categoryIcon: selectedCategory.icon,
+                categoryColorName: selectedCategory.colorName
+            )
+            repository.add(newExpense)
+        }
+
+        onSave?()
+        dismiss()
+    }
+}
+
+#Preview {
+    AddExpenseView(repository: PreviewExpenseRepository(), categoryRepository: PreviewCategoryRepository())
+}
+
+private class PreviewExpenseRepository: ExpenseRepository {
+    func fetchAll() -> [Expense] { [] }
+    func add(_ expense: Expense) {}
+    func update(_ expense: Expense) {}
+    func delete(_ expense: Expense) {}
+}
+
+private class PreviewCategoryRepository: CategoryRepository {
+    func fetchAll() -> [Category] {
+        [
+            Category(id: "cat-food", name: "Food", icon: "fork.knife", colorName: "systemGreen", type: .expense, isSystemDefined: true),
+            Category(id: "cat-transport", name: "Transport", icon: "car.fill", colorName: "systemBlue", type: .expense, isSystemDefined: true)
+        ]
+    }
+    func add(_ category: Category) {}
+}
