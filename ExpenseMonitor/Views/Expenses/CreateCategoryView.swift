@@ -10,6 +10,8 @@ struct CreateCategoryView: View {
     var onCreate: ((Category) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
 
     @State private var name = ""
     @State private var selectedIcon = "tag.fill"
@@ -80,7 +82,7 @@ struct CreateCategoryView: View {
                     .background(Category.color(for: selectedColorName).opacity(0.15))
                     .clipShape(Circle())
                 Text(name.isEmpty ? "New Category" : name)
-                    .font(.subheadline)
+                    .font(typography.subheadline)
                     .foregroundStyle(.secondary)
             }
             .padding(.bottom, 12)
@@ -130,7 +132,7 @@ struct CreateCategoryView: View {
             .font(.title3)
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(width: 44, height: 44)
-            .background(isSelected ? Color(.systemBlue) : Color(.systemGray5))
+            .background(isSelected ? themeColors.accent : Color(.systemGray5))
             .clipShape(Circle())
             .contentShape(Rectangle())
             .onTapGesture {

@@ -14,11 +14,14 @@ struct SpendingTrendCard: View {
     @State private var granularity = "DAILY"
     private let granularities = ["DAILY", "MONTHLY", "YEARLY"]
 
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Spending Trend")
-                    .font(.headline)
+                    .font(typography.headline)
 
                 Spacer()
 
@@ -47,7 +50,7 @@ struct SpendingTrendCard: View {
                     y: .value("Amount", point.amount),
                     width: .ratio(0.2)
                 )
-                .foregroundStyle(Color(.systemBlue))
+                .foregroundStyle(themeColors.accent)
                 .cornerRadius(4)
                 
             }

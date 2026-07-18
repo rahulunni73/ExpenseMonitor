@@ -9,20 +9,22 @@ struct EMIReminderCard: View {
     let title: String
     let subtitle: String
 
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "arrow.triangle.2.circlepath")
-                .foregroundStyle(Color(.systemBlue))
+                .foregroundStyle(themeColors.accent)
                 .padding(10)
-                .background(Color(.systemBlue).opacity(0.15))
+                .background(themeColors.accent.opacity(0.15))
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline)
-                    .bold()
+                    .font(typography.subheadlineBold)
                 Text(subtitle)
-                    .font(.caption)
+                    .font(typography.caption)
                     .foregroundStyle(.secondary)
             }
 
@@ -36,7 +38,7 @@ struct EMIReminderCard: View {
         .background(Color(.secondarySystemGroupedBackground))
         .overlay(alignment: .leading) {
             Rectangle()
-                .fill(Color(.systemBlue))
+                .fill(themeColors.accent)
                 .frame(width: 4)
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))

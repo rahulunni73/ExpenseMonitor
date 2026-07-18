@@ -10,6 +10,7 @@ struct CategoryFilterPickerView: View {
     @Binding var selectedCategories: Set<String>
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.typography) private var typography
 
     @State private var categories: [Category] = []
     @State private var selectedType: CategoryType = .expense
@@ -28,16 +29,18 @@ struct CategoryFilterPickerView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "arrow.left")
+                        .frame(width: 44, height: 44)
                 }
                 Spacer()
                 Text("Select Categories")
-                    .font(.headline)
+                    .font(typography.headline)
                 Spacer()
                 Button {
                     selectedCategories = pendingSelection
                     dismiss()
                 } label: {
                     Image(systemName: "checkmark")
+                        .frame(width: 44, height: 44)
                 }
             }
             .padding()
@@ -76,7 +79,7 @@ struct CategoryFilterPickerView: View {
                 .background(isSelected ? category.swiftUIColor : category.swiftUIColor.opacity(0.15))
                 .clipShape(Circle())
             Text(category.name)
-                .font(.caption)
+                .font(typography.caption)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
         }

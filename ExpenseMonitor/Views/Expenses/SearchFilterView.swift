@@ -12,6 +12,8 @@ struct SearchFilterView: View {
     let categoryRepository: CategoryRepository
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
 
     @State private var pendingSearchText: String = ""
     @State private var pendingType: CategoryType? = nil
@@ -25,10 +27,11 @@ struct SearchFilterView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "arrow.left")
+                        .frame(width: 44, height: 44)
                 }
                 Spacer()
                 Text("Search")
-                    .font(.headline)
+                    .font(typography.headline)
                 Spacer()
             }
             .padding()
@@ -46,7 +49,7 @@ struct SearchFilterView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Type")
-                            .font(.subheadline.bold())
+                            .font(typography.subheadlineBold)
                         HStack(spacing: 8) {
                             filterPill("All", isSelected: pendingType == nil) {
                                 pendingType = nil
@@ -62,7 +65,7 @@ struct SearchFilterView: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Category")
-                            .font(.subheadline.bold())
+                            .font(typography.subheadlineBold)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 filterPill("All", isSelected: pendingCategoryFilters.isEmpty) {
@@ -79,7 +82,7 @@ struct SearchFilterView: View {
                                     Image(systemName: "plus")
                                         .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(.primary)
-                                        .padding(10)
+                                        .frame(width: 44, height: 44)
                                         .background(Color(.systemGray6))
                                         .clipShape(Circle())
                                 }
@@ -114,7 +117,7 @@ struct SearchFilterView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Color(.systemBlue))
+                        .background(themeColors.accent)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
@@ -133,11 +136,11 @@ struct SearchFilterView: View {
 
     private func filterPill(_ label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Text(label)
-            .font(.subheadline.weight(isSelected ? .semibold : .regular))
+            .font(typography.subheadline(emphasized: isSelected))
             .foregroundStyle(isSelected ? .white : .primary)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(isSelected ? Color(.systemBlue) : Color(.systemGray6))
+            .background(isSelected ? themeColors.accent : Color(.systemGray6))
             .clipShape(Capsule())
             .contentShape(Rectangle())
             .onTapGesture(perform: action)

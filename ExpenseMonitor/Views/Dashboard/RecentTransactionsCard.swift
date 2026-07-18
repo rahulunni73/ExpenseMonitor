@@ -8,15 +8,18 @@ import SwiftUI
 struct RecentTransactionsCard: View {
     let transactions: [Expense]
 
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Recent Transactions")
-                    .font(.headline)
+                    .font(typography.headline)
                 Spacer()
                 Text("View All")
-                    .font(.subheadline)
-                    .foregroundStyle(Color(.systemBlue))
+                    .font(typography.subheadline)
+                    .foregroundStyle(themeColors.accent)
             }
 
             VStack(spacing: 8) {

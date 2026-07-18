@@ -26,23 +26,30 @@ struct ExpensesHeaderView: View {
     @State private var isMonthYearPickerPresented = false
     @State private var fullScreenDestination: FullScreenDestination?
 
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("Expenses")
-                    .font(.title2.bold())
+                    .font(typography.title2Bold)
                 Spacer()
                 Button {
                     fullScreenDestination = .searchFilter
                 } label: {
                     Image(systemName: "magnifyingglass")
+                        .font(.system(size: 20))
                         .foregroundStyle(.secondary)
+                        .frame(width: 44, height: 44)
                 }
                 Button {
                     fullScreenDestination = .calendar
                 } label: {
                     Image(systemName: "calendar")
+                        .font(.system(size: 20))
                         .foregroundStyle(.secondary)
+                        .frame(width: 44, height: 44)
                 }
             }
 
@@ -52,15 +59,15 @@ struct ExpensesHeaderView: View {
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(selectedMonth.formatted(.dateTime.year()))
-                            .font(.caption)
+                            .font(typography.caption)
                             .foregroundStyle(.secondary)
                         HStack(spacing: 4) {
                             if let selectedDay {
                                 Text(selectedDay.formatted(.dateTime.day().month(.abbreviated)))
-                                    .font(.title3.bold())
+                                    .font(typography.title3Bold)
                             } else {
                                 Text(selectedMonth.formatted(.dateTime.month(.abbreviated)))
-                                    .font(.title3.bold())
+                                    .font(typography.title3Bold)
                             }
                             Image(systemName: "chevron.down")
                                 .font(.caption2)
@@ -72,11 +79,11 @@ struct ExpensesHeaderView: View {
 
                 Spacer()
 
-                statColumn(title: "Expenses", amount: totalExpense, color: Color(.systemRed))
+                statColumn(title: "Expenses", amount: totalExpense, color: themeColors.expense)
                 Spacer()
-                statColumn(title: "Income", amount: totalIncome, color: Color(.systemGreen))
+                statColumn(title: "Income", amount: totalIncome, color: themeColors.income)
                 Spacer()
-                statColumn(title: "Balance", amount: balance, color: Color(.systemBlue))
+                statColumn(title: "Balance", amount: balance, color: themeColors.accent)
             }
         }
         .padding()
@@ -102,10 +109,10 @@ struct ExpensesHeaderView: View {
     private func statColumn(title: String, amount: Double, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
-                .font(.caption)
+                .font(typography.caption)
                 .foregroundStyle(.secondary)
-            Text("₹\(amount, specifier: "%.0f")")
-                .font(.subheadline.bold())
+            Text(amount.currencyFormatted)
+                .font(typography.subheadlineBold)
                 .foregroundStyle(color)
         }
     }

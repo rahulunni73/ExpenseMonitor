@@ -11,10 +11,12 @@ import Charts
 struct ExpenseBreakdownCard: View {
     let data: [CategoryBreakdown]
 
+    @Environment(\.typography) private var typography
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Expense Breakdown")
-                .font(.headline)
+                .font(typography.headline)
 
             HStack(spacing: 24) {
                 ZStack {
@@ -28,7 +30,7 @@ struct ExpenseBreakdownCard: View {
                     .frame(width: 140, height: 140)
 
                     Text("100%")
-                        .font(.headline)
+                        .font(typography.headline)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {

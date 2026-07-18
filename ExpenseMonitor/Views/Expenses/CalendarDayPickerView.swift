@@ -9,6 +9,7 @@ struct CalendarDayPickerView: View {
     @Binding var selectedMonth: Date
     @Binding var selectedDay: Date?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.typography) private var typography
 
     @State private var displayedMonth: Date
     @State private var isMonthYearPickerPresented = false
@@ -44,12 +45,13 @@ struct CalendarDayPickerView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "arrow.left")
+                        .frame(width: 44, height: 44)
                 }
 
                 Spacer()
 
                 Text("Calendar")
-                    .font(.headline)
+                    .font(typography.headline)
 
                 Spacer()
 
@@ -70,7 +72,7 @@ struct CalendarDayPickerView: View {
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(Calendar.current.shortWeekdaySymbols, id: \.self) { symbol in
                             Text(symbol)
-                                .font(.caption)
+                                .font(typography.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -97,7 +99,7 @@ struct CalendarDayPickerView: View {
 
     private func dayCell(_ day: Int) -> some View {
         Text("\(day)")
-            .font(.subheadline)
+            .font(typography.subheadline)
             .frame(maxWidth: .infinity)
             .frame(height: 44)
             .background(Color(.systemGray6))

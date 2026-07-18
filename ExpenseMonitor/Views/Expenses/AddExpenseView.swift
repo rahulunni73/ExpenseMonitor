@@ -12,6 +12,8 @@ struct AddExpenseView: View {
     var onSave: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
 
     @State private var title = ""
     @State private var amountText = "0"
@@ -52,7 +54,7 @@ struct AddExpenseView: View {
                 }
                 Spacer()
                 Text(existingExpense == nil ? "Add" : "Edit")
-                    .font(.headline)
+                    .font(typography.headline)
                 Spacer()
                 Image(systemName: "dollarsign.arrow.circlepath")
                     .foregroundStyle(.secondary)
@@ -119,10 +121,10 @@ struct AddExpenseView: View {
                 Spacer()
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text("₹")
-                        .font(.title2.bold())
-                        .foregroundStyle(Color(.systemBlue))
+                        .font(typography.title2Bold)
+                        .foregroundStyle(themeColors.accent)
                     Text(amountText)
-                        .font(.system(size: 40, weight: .bold))
+                        .font(typography.amount(size: 40))
                 }
                 Spacer()
             }
@@ -156,7 +158,7 @@ struct AddExpenseView: View {
                 VStack(spacing: 2) {
                     Image(systemName: "calendar")
                     Text(dateLabel)
-                        .font(.caption2)
+                        .font(typography.caption2)
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
@@ -183,7 +185,7 @@ struct AddExpenseView: View {
                 keypadTapped(key)
             } label: {
                 Text(key)
-                    .font(.title2.weight(.semibold))
+                    .font(typography.font(weight: .medium, size: 22, relativeTo: .title2))
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .background(Color(.systemGray6))
@@ -230,7 +232,7 @@ struct AddExpenseView: View {
                 .background(isSelected ? category.swiftUIColor : category.swiftUIColor.opacity(0.15))
                 .clipShape(Circle())
             Text(category.name)
-                .font(.caption)
+                .font(typography.caption)
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
         }
@@ -253,7 +255,7 @@ struct AddExpenseView: View {
                         .foregroundStyle(Color(.systemGray3))
                 )
             Text("New")
-                .font(.caption)
+                .font(typography.caption)
                 .foregroundStyle(.secondary)
         }
         .contentShape(Rectangle())

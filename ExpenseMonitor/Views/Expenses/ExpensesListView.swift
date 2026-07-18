@@ -14,12 +14,18 @@ struct ExpensesListView: View {
     let categoryRepository: CategoryRepository
     @State private var viewModel: ExpensesViewModel
     let isActive: Bool
+    let refreshTrigger: Int
+    @State private var expenseForDetail: Expense?
     @State private var expenseToEdit: Expense?
+    @State private var pendingEditExpense: Expense?
 
-    init(repository: ExpenseRepository, categoryRepository: CategoryRepository,isActive: Bool) {
+    @Environment(\.typography) private var typography
+
+    init(repository: ExpenseRepository, categoryRepository: CategoryRepository, isActive: Bool, refreshTrigger: Int = 0) {
         self.repository = repository
         self.categoryRepository = categoryRepository
         self.isActive = isActive
+        self.refreshTrigger = refreshTrigger
         _viewModel = State(initialValue: ExpensesViewModel(repository: repository))
     }
 
@@ -43,25 +49,34 @@ struct ExpensesListView: View {
             Button("Seed Sample Data (Debug)") {
                 viewModel.seedSampleData()
             }
-            .font(.caption)
+            .font(typography.caption)
             .padding(.vertical, 4)
 
-            List {
-                ForEach(viewModel.groupedExpenses) { section in
-                    Section(header: Text(section.title)) {
-                        ForEach(section.expenses) { expense in
-                            ExpenseRow(expense: expense) {
-                                expenseToEdit = expense
+            if viewModel.groupedExpenses.isEmpty {
+                emptyStateView
+            } else {
+                List {
+                    ForEach(viewModel.groupedExpenses) { section in
+                        Section(header: Text(section.title)) {
+                            ForEach(section.expenses) { expense in
+                                ExpenseRow(expense: expense) {
+                                    expenseForDetail = expense
+                                }
+                                .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
                             }
-                            .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
-                        }
-                        .onDelete { offsets in
-                            viewModel.deleteItems(from: section.expenses, at: offsets)
+                            .onDelete { offsets in
+                                viewModel.deleteItems(from: section.expenses, at: offsets)
+                            }
                         }
                     }
                 }
+                .listStyle(.plain)
             }
-            .listStyle(.plain)
+        }
+        .overlay(alignment: .bottom) {
+            if let pendingDeletion = viewModel.pendingDeletion {
+                undoBanner(count: pendingDeletion.expenses.count)
+            }
         }
         .onAppear {
             viewModel.loadExpenses()
@@ -71,6 +86,28 @@ struct ExpensesListView: View {
                 viewModel.loadExpenses()
             }
         }
+        .onChange(of: refreshTrigger) { _, _ in
+            viewModel.loadExpenses()
+        }
+        .onChange(of: expenseForDetail == nil) { _, isNil in
+            if isNil, let pendingEditExpense {
+                expenseToEdit = pendingEditExpense
+                self.pendingEditExpense = nil
+            }
+        }
+        .fullScreenCover(item: $expenseForDetail) { expense in
+            ExpenseDetailView(
+                expense: expense,
+                onEdit: {
+                    pendingEditExpense = expense
+                    expenseForDetail = nil
+                },
+                onDelete: {
+                    viewModel.deleteExpense(expense)
+                    expenseForDetail = nil
+                }
+            )
+        }
         .fullScreenCover(item: $expenseToEdit) { expense in
             AddExpenseView(
                 repository: repository,
@@ -79,6 +116,45 @@ struct ExpensesListView: View {
                 onSave: { viewModel.loadExpenses() }
             )
         }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: viewModel.expenses.isEmpty ? "tray" : "line.3.horizontal.decrease.circle")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
+            Text(viewModel.expenses.isEmpty ? "No expenses yet" : "No matching expenses")
+                .font(typography.headline)
+            Text(viewModel.expenses.isEmpty
+                 ? "Tap the + button to add your first expense."
+                 : "Try adjusting your filters or search.")
+                .font(typography.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private func undoBanner(count: Int) -> some View {
+        HStack {
+            Text(count == 1 ? "Expense deleted" : "\(count) expenses deleted")
+                .font(typography.subheadline)
+                .foregroundStyle(.white)
+            Spacer()
+            Button("Undo") {
+                viewModel.undoDelete()
+            }
+            .font(typography.subheadlineBold)
+            .foregroundStyle(Color(.systemYellow))
+        }
+        .padding()
+        .background(Color.black.opacity(0.85))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+        .padding(.bottom, 8)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }
 

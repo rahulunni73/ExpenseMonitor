@@ -37,13 +37,16 @@ enum AppTab {
 struct ContentView: View {
     
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
     @State private var selectedTab: AppTab = .expenses
     @State private var isAddExpensePresented = false
+    @State private var expensesDidChange = 0
     
     var body: some View {
         VStack(spacing:0){
             ZStack {
-                DashboardView()
+                DashboardView(entitlements: StubEntitlementsProvider())
                     .opacity(selectedTab == .dashboard ? 1 : 0)
                     .allowsHitTesting(selectedTab == .dashboard)
                 
@@ -53,7 +56,8 @@ struct ContentView: View {
                         entitlements: StubEntitlementsProvider()
                     ),
                     categoryRepository: DefaultCategoryRepository(modelContext: modelContext),
-                    isActive: selectedTab == .expenses
+                    isActive: selectedTab == .expenses,
+                    refreshTrigger: expensesDidChange
                 )
                 .opacity(selectedTab == .expenses ? 1 : 0)
                 .allowsHitTesting(selectedTab == .expenses)
@@ -77,7 +81,8 @@ struct ContentView: View {
                     modelContext: modelContext,
                     entitlements: StubEntitlementsProvider()
                 ),
-                categoryRepository: DefaultCategoryRepository(modelContext: modelContext)
+                categoryRepository: DefaultCategoryRepository(modelContext: modelContext),
+                onSave: { expensesDidChange += 1 }
             )
         }
         
@@ -150,9 +155,9 @@ struct ContentView: View {
                 Image(systemName: tab.icon)
                     .font(.system(size: 20))
                 Text(tab.title)
-                    .font(.caption2)
+                    .font(typography.caption2)
             }
-            .foregroundStyle(selectedTab == tab ? Color(.systemBlue) : .secondary)
+            .foregroundStyle(selectedTab == tab ? themeColors.accent : .secondary)
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
@@ -166,7 +171,7 @@ struct ContentView: View {
                 .font(.title2.bold())
                 .foregroundStyle(.white)
                 .frame(width: 56, height: 56)
-                .background(Color(.systemBlue))
+                .background(themeColors.accent)
                 .clipShape(Circle())
                 .shadow(radius: 4, y: 2)
         }

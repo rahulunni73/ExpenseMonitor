@@ -9,6 +9,8 @@ struct MonthYearPickerView: View {
     @Binding var selectedMonth: Date
     @Binding var selectedDay: Date?
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
 
     @State private var pendingYear: Int
     @State private var pendingMonthIndex: Int
@@ -31,19 +33,20 @@ struct MonthYearPickerView: View {
     var body: some View {
         VStack(spacing: 20) {
             Text(pendingDate.formatted(.dateTime.month(.wide).year()))
-                .font(.title3.bold())
+                .font(typography.title3Bold)
 
             HStack {
                 Button {
                     pendingYear -= 1
                 } label: {
                     Image(systemName: "chevron.left")
+                        .frame(width: 44, height: 44)
                 }
 
                 Spacer()
 
                 Text(String(pendingYear))
-                    .font(.headline)
+                    .font(typography.headline)
 
                 Spacer()
 
@@ -51,6 +54,7 @@ struct MonthYearPickerView: View {
                     pendingYear += 1
                 } label: {
                     Image(systemName: "chevron.right")
+                        .frame(width: 44, height: 44)
                 }
             }
             .padding(.horizontal, 40)
@@ -73,7 +77,7 @@ struct MonthYearPickerView: View {
                     selectedDay = nil
                     dismiss()
                 }
-                .foregroundStyle(Color(.systemBlue))
+                .foregroundStyle(themeColors.accent)
                 .fontWeight(.semibold)
             }
             .padding(.top, 8)
@@ -85,11 +89,11 @@ struct MonthYearPickerView: View {
     private func monthButton(_ monthIndex: Int) -> some View {
         let isSelected = monthIndex == pendingMonthIndex
         return Text(monthSymbols[monthIndex - 1])
-            .font(.subheadline.weight(isSelected ? .bold : .regular))
+            .font(typography.subheadline(emphasized: isSelected))
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(isSelected ? Color(.systemBlue) : Color(.systemGray6))
+            .background(isSelected ? themeColors.accent : Color(.systemGray6))
             .clipShape(Capsule())
             .contentShape(Rectangle())
             .onTapGesture {

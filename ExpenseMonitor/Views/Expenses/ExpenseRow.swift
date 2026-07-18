@@ -12,8 +12,11 @@ struct ExpenseRow: View {
     let expense: Expense
     var onTap: (() -> Void)? = nil
 
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
     private var amountColor: Color {
-        expense.type == .income ? Color(.systemGreen) : Color(.systemRed)
+        expense.type == .income ? themeColors.income : themeColors.expense
     }
 
     private var amountPrefix: String {
@@ -30,21 +33,21 @@ struct ExpenseRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.title)
-                    .font(.subheadline)
+                    .font(typography.subheadline)
 
                 HStack(spacing: 4) {
                     Text(expense.category)
                     Text("•")
                     Text(expense.expenseDate.formatted(date: .omitted, time: .shortened))
                 }
-                .font(.caption)
+                .font(typography.caption)
                 .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Text("\(amountPrefix)₹\(expense.amount, specifier: "%.2f")")
-                .font(.subheadline.bold())
+            Text("\(amountPrefix)\(expense.amount.currencyFormatted)")
+                .font(typography.subheadlineBold)
                 .foregroundStyle(amountColor)
         }
         .contentShape(Rectangle())

@@ -25,9 +25,14 @@ struct ExpenseMonitorApp: App {
         }
     }()
 
+    @State private var themeManager = ThemeManager(theme: .forest)
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(themeManager)
+                .environment(\.themeColors, themeManager.currentTheme.colors)
+                .environment(\.typography, themeManager.currentTypography)
         }
         .modelContainer(sharedModelContainer)
     }

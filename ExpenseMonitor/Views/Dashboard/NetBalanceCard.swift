@@ -10,46 +10,50 @@ struct NetBalanceCard: View {
     let income: Double
     let expense: Double
 
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
 
             Text("NET BALANCE")
-                .font(.caption)
+                .font(typography.caption)
                 .foregroundStyle(.secondary)
-            Text("₹\(balance, specifier: "%.2f")")
-                .font(.title)
-                .bold()
+            Text(balance.currencyFormatted)
+                .font(typography.font(weight: .bold, size: 28, relativeTo: .title))
 
             HStack(spacing: 12) {
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.down")
-                            .foregroundStyle(Color(.systemGreen))
+                            .foregroundStyle(themeColors.income)
+                            .font(.caption)
                         Text("INCOME")
+                            .font(typography.caption)
                     }
-                    .font(.caption)
-                    Text("₹\(income, specifier: "%.0f")")
-                        .font(.headline)
+                    Text(income.currencyFormatted)
+                        .font(typography.headline)
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemGreen).opacity(0.15))
+                .background(themeColors.income.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
                         Image(systemName: "arrow.up")
-                            .foregroundStyle(Color(.systemRed))
-                        Text("EXPENSE")
+                            .foregroundStyle(themeColors.expense)
                             .font(.caption)
+                        Text("EXPENSE")
+                            .font(typography.caption)
                     }
-                    Text("₹\(expense, specifier: "%.0f")")
-                        .font(.headline)
+                    Text(expense.currencyFormatted)
+                        .font(typography.headline)
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemRed).opacity(0.15))
+                .background(themeColors.expense.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
             }
