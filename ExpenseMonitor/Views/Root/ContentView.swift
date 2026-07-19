@@ -83,6 +83,11 @@ struct ContentView: View {
 
             customTabBar
         }
+        .onAppear {
+            let loanRepository = DefaultLoanRepository(modelContext: modelContext)
+            let chitFundRepository = DefaultChitFundRepository(modelContext: modelContext)
+            NotificationService.rescheduleReminders(loans: loanRepository.fetchAll(), chitFunds: chitFundRepository.fetchAll())
+        }
     }
     
     

@@ -29,6 +29,8 @@ struct SettingsView: View {
     @State private var importErrorMessage = ""
     @State private var isManageCategoriesPresented = false
     @State private var isThemePickerPresented = false
+    @AppStorage("emiRemindersEnabled") private var emiRemindersEnabled = false
+    @State private var isNotificationPermissionDeniedAlertPresented = false
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -47,6 +49,32 @@ struct SettingsView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return "ExpenseMonitor-Backup-\(formatter.string(from: Date()))"
+    }
+
+    private var emiRemindersToggleBinding: Binding<Bool> {
+        Binding(
+            get: { emiRemindersEnabled },
+            set: { newValue in
+                if newValue {
+                    NotificationService.requestAuthorization { granted in
+                        if granted {
+                            emiRemindersEnabled = true
+                            rescheduleReminders()
+                        } else {
+                            emiRemindersEnabled = false
+                            isNotificationPermissionDeniedAlertPresented = true
+                        }
+                    }
+                } else {
+                    emiRemindersEnabled = false
+                    rescheduleReminders()
+                }
+            }
+        )
+    }
+
+    private func rescheduleReminders() {
+        NotificationService.rescheduleReminders(loans: loanRepository.fetchAll(), chitFunds: chitFundRepository.fetchAll())
     }
 
     var body: some View {
@@ -88,6 +116,34 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle(isOn: emiRemindersToggleBinding) {
+                        HStack {
+                            Image(systemName: "bell.fill")
+                                .foregroundStyle(.white)
+                                .frame(width: 28, height: 28)
+                                .background(Color(.systemRed))
+                                .clipShape(RoundedRectangle(cornerRadius: 7))
+                            Text("EMI Reminders")
+                                .font(typography.body)
+                        }
+                    }
+                    .padding(.vertical, 4)
+
+                    if emiRemindersEnabled {
+                        Button {
+                            NotificationService.sendTestReminder()
+                        } label: {
+                            settingsActionRow(icon: "hammer.fill", iconColor: Color(.systemGray), title: "Send Test Reminder (Debug)")
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Notifications")
+                } footer: {
+                    Text("Get a reminder the day before each EMI or chit fund installment is due.")
+                }
+
+                Section {
                     Button {
                         exportDocument = BackupDocument(data: (try? BackupData.jsonEncoder.encode(backupService.exportData())) ?? Data())
                         isExporting = true
@@ -124,6 +180,14 @@ struct SettingsView: View {
             .listStyle(.insetGrouped)
         }
         .background(themeColors.background)
+        .onAppear {
+            guard emiRemindersEnabled else { return }
+            NotificationService.currentAuthorizationStatus { status in
+                if status != .authorized {
+                    emiRemindersEnabled = false
+                }
+            }
+        }
         .sheet(isPresented: $isManageCategoriesPresented) {
             ManageCategoriesView(categoryRepository: categoryRepository, expenseRepository: expenseRepository)
         }
@@ -169,6 +233,16 @@ struct SettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(importErrorMessage)
+        }
+        .alert("Notifications Disabled", isPresented: $isNotificationPermissionDeniedAlertPresented) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("EMI Reminders needs notification permission. You can enable it for ExpenseMonitor in iOS Settings.")
         }
     }
 
