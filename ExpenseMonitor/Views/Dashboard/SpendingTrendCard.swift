@@ -32,7 +32,7 @@ struct SpendingTrendCard: View {
                             .foregroundStyle(option == granularity ? .primary : .secondary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
-                            .background(option == granularity ? Color.white : Color.clear)
+                            .background(option == granularity ? themeColors.surface : Color.clear)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                             .shadow(color: .black.opacity(option == granularity ? 0.1 : 0), radius: 2, y: 1)
                             .contentShape(Rectangle())
@@ -40,7 +40,7 @@ struct SpendingTrendCard: View {
                     }
                 }
                 .padding(2)
-                .background(Color(.systemGray5))
+                .background(themeColors.surfaceSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
@@ -57,7 +57,7 @@ struct SpendingTrendCard: View {
             .frame(height: 180)
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

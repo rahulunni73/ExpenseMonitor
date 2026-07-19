@@ -14,6 +14,7 @@ struct DashboardView : View {
     @State private var viewModel = DashboardViewModel()
     @State private var isSettingsPresented = false
 
+    @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
     var body: some View {
@@ -61,7 +62,7 @@ struct DashboardView : View {
             .padding(.horizontal)
             .scrollIndicators(.hidden, axes: .vertical)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(themeColors.background)
         .fullScreenCover(isPresented: $isSettingsPresented) {
             SettingsView(entitlements: entitlements)
         }

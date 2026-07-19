@@ -107,7 +107,7 @@ struct CreateCategoryView: View {
             HStack(spacing: 12) {
                 TextField("Category name", text: $name)
                     .padding(12)
-                    .background(Color(.systemGray6))
+                    .background(themeColors.surfaceSecondary)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
 
                 Button {
@@ -123,7 +123,7 @@ struct CreateCategoryView: View {
             }
             .padding()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(themeColors.background)
     }
 
     private func iconSwatch(_ icon: String) -> some View {
@@ -132,7 +132,7 @@ struct CreateCategoryView: View {
             .font(.title3)
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(width: 44, height: 44)
-            .background(isSelected ? themeColors.accent : Color(.systemGray5))
+            .background(isSelected ? themeColors.accent : themeColors.surfaceSecondary)
             .clipShape(Circle())
             .contentShape(Rectangle())
             .onTapGesture {

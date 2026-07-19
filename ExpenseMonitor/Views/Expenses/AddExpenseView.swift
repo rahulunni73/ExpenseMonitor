@@ -85,7 +85,7 @@ struct AddExpenseView: View {
                     .padding(.bottom, 12)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(themeColors.background)
         .onAppear {
             categories = categoryRepository.fetchAll()
             if let existingExpense {
@@ -131,7 +131,7 @@ struct AddExpenseView: View {
 
             TextField("Note", text: $title)
                 .padding(12)
-                .background(Color(.systemGray6))
+                .background(themeColors.surfaceSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
 
             LazyVGrid(columns: keypadColumns, spacing: 12) {
@@ -141,7 +141,7 @@ struct AddExpenseView: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
@@ -162,7 +162,7 @@ struct AddExpenseView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
-                .background(Color(.systemGray6))
+                .background(themeColors.surfaceSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
@@ -188,7 +188,7 @@ struct AddExpenseView: View {
                     .font(typography.font(weight: .medium, size: 22, relativeTo: .title2))
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .background(Color(.systemGray6))
+                    .background(themeColors.surfaceSecondary)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)

@@ -20,7 +20,7 @@ struct NetBalanceCard: View {
                 .font(typography.caption)
                 .foregroundStyle(.secondary)
             Text(balance.currencyFormatted)
-                .font(typography.font(weight: .bold, size: 28, relativeTo: .title))
+                .font(typography.amount(size: 28))
 
             HStack(spacing: 12) {
 
@@ -59,7 +59,7 @@ struct NetBalanceCard: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

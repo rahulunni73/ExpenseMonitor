@@ -67,7 +67,7 @@ struct ExpenseDetailView: View {
                             detailRow(label: "Note", value: note)
                         }
                     }
-                    .background(Color(.secondarySystemGroupedBackground))
+                    .background(themeColors.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding(.horizontal)
                 }
@@ -100,7 +100,7 @@ struct ExpenseDetailView: View {
             }
             .padding()
         }
-        .background(Color(.systemGroupedBackground))
+        .background(themeColors.background)
     }
 
     private func detailRow(label: String, value: String) -> some View {

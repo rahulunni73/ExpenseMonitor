@@ -25,7 +25,7 @@ struct ExpenseMonitorApp: App {
         }
     }()
 
-    @State private var themeManager = ThemeManager(theme: .forest)
+    @State private var themeManager = ThemeManager(theme:.noir)
 
     var body: some Scene {
         WindowGroup {

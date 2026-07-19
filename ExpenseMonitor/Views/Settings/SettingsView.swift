@@ -9,6 +9,7 @@ struct SettingsView: View {
     let entitlements: EntitlementsProviding
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
     private var appVersion: String {
@@ -57,7 +58,7 @@ struct SettingsView: View {
             }
             .listStyle(.insetGrouped)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(themeColors.background)
     }
 
     private func settingsRow(icon: String, iconColor: Color, title: String, detail: String) -> some View {

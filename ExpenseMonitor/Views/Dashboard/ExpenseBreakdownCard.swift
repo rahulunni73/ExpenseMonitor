@@ -11,6 +11,7 @@ import Charts
 struct ExpenseBreakdownCard: View {
     let data: [CategoryBreakdown]
 
+    @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
     var body: some View {
@@ -49,7 +50,7 @@ struct ExpenseBreakdownCard: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

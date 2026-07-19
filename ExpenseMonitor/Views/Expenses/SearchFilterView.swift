@@ -44,7 +44,7 @@ struct SearchFilterView: View {
                         TextField("Search by title", text: $pendingSearchText)
                     }
                     .padding(12)
-                    .background(Color(.systemGray6))
+                    .background(themeColors.surfaceSecondary)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -83,7 +83,7 @@ struct SearchFilterView: View {
                                         .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(.primary)
                                         .frame(width: 44, height: 44)
-                                        .background(Color(.systemGray6))
+                                        .background(themeColors.surfaceSecondary)
                                         .clipShape(Circle())
                                 }
                             }
@@ -102,7 +102,7 @@ struct SearchFilterView: View {
                     Image(systemName: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(Color(.systemGray5))
+                        .background(themeColors.surfaceSecondary)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .foregroundStyle(.primary)
@@ -140,7 +140,7 @@ struct SearchFilterView: View {
             .foregroundStyle(isSelected ? .white : .primary)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(isSelected ? themeColors.accent : Color(.systemGray6))
+            .background(isSelected ? themeColors.accent : themeColors.surfaceSecondary)
             .clipShape(Capsule())
             .contentShape(Rectangle())
             .onTapGesture(perform: action)

@@ -13,7 +13,9 @@ struct PeriodSelector: View {
     
     @State private var selectedPeriod = "This Month"
     let options = ["This Month", "Custom"]
-    
+
+    @Environment(\.themeColors) private var themeColors
+
     var body: some View {
         
         
@@ -26,7 +28,7 @@ struct PeriodSelector: View {
                     .foregroundStyle(option == selectedPeriod ? .primary : .secondary)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity)
-                    .background(option == selectedPeriod ? Color.white : Color.clear)
+                    .background(option == selectedPeriod ? themeColors.surface : Color.clear)
                     .clipShape(RoundedRectangle(cornerRadius:8))
                     .shadow(color: .black.opacity(option == selectedPeriod ? 0.1 : 0),radius: 3,y: 1)
                     .contentShape(Rectangle())
@@ -36,7 +38,7 @@ struct PeriodSelector: View {
             
         }.padding(4)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.systemGray5))
+            .background(themeColors.surfaceSecondary)
             .clipShape(RoundedRectangle(cornerRadius:10))
         
         

@@ -19,6 +19,7 @@ struct ExpensesListView: View {
     @State private var expenseToEdit: Expense?
     @State private var pendingEditExpense: Expense?
 
+    @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
     init(repository: ExpenseRepository, categoryRepository: CategoryRepository, isActive: Bool, refreshTrigger: Int = 0) {
@@ -40,6 +41,7 @@ struct ExpensesListView: View {
                 typeFilter: $viewModel.typeFilter,
                 categoryFilters: $viewModel.categoryFilters,
                 categoryRepository: categoryRepository,
+                expenses: viewModel.expenses,
                 totalExpense: viewModel.totalExpense,
                 totalIncome: viewModel.totalIncome,
                 balance: viewModel.balance
@@ -57,22 +59,34 @@ struct ExpensesListView: View {
             } else {
                 List {
                     ForEach(viewModel.groupedExpenses) { section in
-                        Section(header: Text(section.title)) {
+                        Section {
                             ForEach(section.expenses) { expense in
                                 ExpenseRow(expense: expense) {
                                     expenseForDetail = expense
                                 }
-                                .listRowInsets(EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16))
+                                .padding(12)
+                                .background(themeColors.surface)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                             }
                             .onDelete { offsets in
                                 viewModel.deleteItems(from: section.expenses, at: offsets)
                             }
+                        } header: {
+                            Text(section.title)
+                                .font(typography.subheadlineBold)
+                                .foregroundStyle(.primary)
                         }
+                        .listSectionSeparator(.hidden)
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
         }
+        .background(themeColors.backgroundGradient)
         .overlay(alignment: .bottom) {
             if let pendingDeletion = viewModel.pendingDeletion {
                 undoBanner(count: pendingDeletion.expenses.count)
@@ -134,7 +148,6 @@ struct ExpensesListView: View {
                 .padding(.horizontal, 32)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
     }
 
     private func undoBanner(count: Int) -> some View {

@@ -41,6 +41,9 @@ struct HelveticaNeueTypography: AppTypography {
     }
 
     func amount(size: CGFloat) -> Font {
-        font(weight: .bold, size: size, relativeTo: .largeTitle)
+        // Helvetica Neue has no tabular-figure OpenType feature, so digits would
+        // jitter in width as amounts change. SF Pro supports tabular digits natively,
+        // so amount displays deliberately break from Helvetica Neue here.
+        .system(size: size, weight: .bold, design: .default).monospacedDigit()
     }
 }

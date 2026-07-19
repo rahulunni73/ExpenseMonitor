@@ -93,7 +93,7 @@ struct MonthYearPickerView: View {
             .foregroundStyle(isSelected ? .white : .primary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(isSelected ? themeColors.accent : Color(.systemGray6))
+            .background(isSelected ? themeColors.accent : themeColors.surfaceSecondary)
             .clipShape(Capsule())
             .contentShape(Rectangle())
             .onTapGesture {

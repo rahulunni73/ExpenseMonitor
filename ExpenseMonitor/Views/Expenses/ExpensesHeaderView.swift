@@ -12,6 +12,7 @@ struct ExpensesHeaderView: View {
     @Binding var typeFilter: CategoryType?
     @Binding var categoryFilters: Set<String>
     let categoryRepository: CategoryRepository
+    let expenses: [Expense]
     let totalExpense: Double
     let totalIncome: Double
     let balance: Double
@@ -83,18 +84,18 @@ struct ExpensesHeaderView: View {
                 Spacer()
                 statColumn(title: "Income", amount: totalIncome, color: themeColors.income)
                 Spacer()
-                statColumn(title: "Balance", amount: balance, color: themeColors.accent)
+                // Balance not needed in the header for now.
+                // statColumn(title: "Balance", amount: balance, color: themeColors.accent)
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
         .sheet(isPresented: $isMonthYearPickerPresented) {
             MonthYearPickerView(selectedMonth: $selectedMonth, selectedDay: $selectedDay)
         }
         .fullScreenCover(item: $fullScreenDestination) { destination in
             switch destination {
             case .calendar:
-                CalendarDayPickerView(selectedMonth: $selectedMonth, selectedDay: $selectedDay)
+                CalendarDayPickerView(selectedMonth: $selectedMonth, selectedDay: $selectedDay, expenses: expenses)
             case .searchFilter:
                 SearchFilterView(
                     searchText: $searchText,
@@ -107,13 +108,15 @@ struct ExpensesHeaderView: View {
     }
 
     private func statColumn(title: String, amount: Double, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(typography.caption)
                 .foregroundStyle(.secondary)
             Text(amount.currencyFormatted)
-                .font(typography.subheadlineBold)
+                .font(typography.amount(size: 17))
                 .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
     }
 }
@@ -126,6 +129,7 @@ struct ExpensesHeaderView: View {
         typeFilter: .constant(nil),
         categoryFilters: .constant([]),
         categoryRepository: PreviewCategoryRepository(),
+        expenses: [],
         totalExpense: 4200,
         totalIncome: 50000,
         balance: 45800

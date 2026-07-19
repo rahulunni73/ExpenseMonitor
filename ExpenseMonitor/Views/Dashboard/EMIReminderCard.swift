@@ -35,7 +35,7 @@ struct EMIReminderCard: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(themeColors.accent)

@@ -187,7 +187,7 @@ struct ContentView: View {
             tabButton(.reports)
         }
         .padding(.top, 8)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
     }
     
 }

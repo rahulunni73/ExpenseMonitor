@@ -32,7 +32,7 @@ struct RecentTransactionsCard: View {
             }
         }
         .padding()
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

@@ -47,7 +47,7 @@ struct ExpenseRow: View {
             Spacer()
 
             Text("\(amountPrefix)\(expense.amount.currencyFormatted)")
-                .font(typography.subheadlineBold)
+                .font(typography.amount(size: 15))
                 .foregroundStyle(amountColor)
         }
         .contentShape(Rectangle())
