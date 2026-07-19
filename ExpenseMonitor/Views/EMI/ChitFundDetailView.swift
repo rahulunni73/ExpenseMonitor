@@ -18,8 +18,7 @@ struct ChitFundDetailView: View {
 
     @State private var isDeleteConfirmationPresented = false
     @State private var isPayoutSheetPresented = false
-    @State private var isLatePaymentSheetPresented = false
-    @State private var pendingLateContribution: Int?
+    @State private var pendingLatePayment: PendingPayment?
     @State private var isEditPresented = false
 
     private let columns = Array(repeating: GridItem(.flexible()), count: 4)
@@ -108,9 +107,9 @@ struct ChitFundDetailView: View {
                 onChange?()
             }
         }
-        .sheet(isPresented: $isLatePaymentSheetPresented) {
-            LatePaymentSheet { penalty in
-                confirmLatePayment(penalty: penalty)
+        .sheet(item: $pendingLatePayment) { pending in
+            ConfirmPaymentSheet(dueDate: pending.dueDate) { paidDate, penalty in
+                confirmPayment(number: pending.number, paidDate: paidDate, penalty: penalty)
             }
         }
         .fullScreenCover(isPresented: $isEditPresented) {
@@ -142,6 +141,10 @@ struct ChitFundDetailView: View {
         .padding()
         .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        }
         .padding(.horizontal)
     }
 
@@ -186,6 +189,10 @@ struct ChitFundDetailView: View {
         .padding(.vertical, 4)
         .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        }
         .padding(.horizontal)
     }
 
@@ -221,6 +228,10 @@ struct ChitFundDetailView: View {
                 .padding()
                 .background(themeColors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                }
                 .padding(.horizontal)
             } else {
                 Button {
@@ -236,6 +247,10 @@ struct ChitFundDetailView: View {
                     .padding()
                     .background(themeColors.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    }
                 }
                 .padding(.horizontal)
             }
@@ -316,8 +331,7 @@ struct ChitFundDetailView: View {
     private func markNextPaid() {
         guard let next = chitFund.nextDueContribution else { return }
         if next.status == .overdue {
-            pendingLateContribution = next.id
-            isLatePaymentSheetPresented = true
+            pendingLatePayment = PendingPayment(number: next.id, dueDate: next.dueDate)
         } else {
             chitFund.paidContributions.append(next.id)
             repository.update(chitFund)
@@ -326,26 +340,24 @@ struct ChitFundDetailView: View {
         }
     }
 
-    private func confirmLatePayment(penalty: Double) {
-        guard let number = pendingLateContribution else { return }
+    private func confirmPayment(number: Int, paidDate: Date, penalty: Double) {
         chitFund.paidContributions.append(number)
         if penalty > 0 {
             chitFund.penalties.append(InstallmentPenalty(installmentNumber: number, amount: penalty))
         }
         repository.update(chitFund)
-        logExpense(contributionNumber: number, penalty: penalty)
+        logExpense(contributionNumber: number, penalty: penalty, expenseDate: paidDate)
         onChange?()
-        pendingLateContribution = nil
     }
 
-    private func logExpense(contributionNumber: Int, penalty: Double) {
+    private func logExpense(contributionNumber: Int, penalty: Double, expenseDate: Date = Date()) {
         let expense = Expense(
             id: UUID().uuidString,
             title: "\(chitFund.name) — Chit Contribution",
             amount: chitFund.monthlyContribution + penalty,
             category: "Financial & Legal",
             type: .expense,
-            expenseDate: Date(),
+            expenseDate: expenseDate,
             note: penalty > 0 ? "Month #\(contributionNumber) (includes \(penalty.currencyFormatted) late penalty)" : "Month #\(contributionNumber)",
             categoryIcon: "creditcard.fill",
             linkedChitFundID: chitFund.id,
@@ -368,6 +380,12 @@ struct ChitFundDetailView: View {
         removeLinkedExpense(contributionNumber: last)
         onChange?()
     }
+}
+
+private struct PendingPayment: Identifiable {
+    let id = UUID()
+    let number: Int
+    let dueDate: Date
 }
 
 private struct PayoutSheet: View {
@@ -452,14 +470,26 @@ private struct PayoutSheet: View {
     }
 }
 
-private struct LatePaymentSheet: View {
-    var onConfirm: (Double) -> Void
+private struct ConfirmPaymentSheet: View {
+    let dueDate: Date
+    var onConfirm: (Date, Double) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
+    @State private var paidDate: Date
     @State private var penaltyText: String = ""
+
+    init(dueDate: Date, onConfirm: @escaping (Date, Double) -> Void) {
+        self.dueDate = dueDate
+        self.onConfirm = onConfirm
+        _paidDate = State(initialValue: dueDate)
+    }
+
+    private var isLate: Bool {
+        Calendar.current.startOfDay(for: paidDate) > Calendar.current.startOfDay(for: dueDate)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -468,7 +498,7 @@ private struct LatePaymentSheet: View {
                     dismiss()
                 }
                 Spacer()
-                Text("Late Payment")
+                Text("Confirm Payment")
                     .font(typography.headline)
                 Spacer()
                 Color.clear
@@ -477,19 +507,24 @@ private struct LatePaymentSheet: View {
             .padding()
 
             VStack(alignment: .leading, spacing: 16) {
-                Text("This contribution was due before today. Add a penalty or late fee, if one was charged.")
+                Text("This contribution was due on \(dueDate.formatted(date: .abbreviated, time: .omitted)). When did you actually pay it?")
                     .font(typography.subheadline)
                     .foregroundStyle(.secondary)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Penalty Amount (optional)")
-                        .font(typography.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("0", text: $penaltyText)
-                        .keyboardType(.decimalPad)
-                        .padding(12)
-                        .background(themeColors.surfaceSecondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                DatePicker("Paid on", selection: $paidDate, in: ...Date(), displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+
+                if isLate {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Penalty Amount (optional)")
+                            .font(typography.caption)
+                            .foregroundStyle(.secondary)
+                        TextField("0", text: $penaltyText)
+                            .keyboardType(.decimalPad)
+                            .padding(12)
+                            .background(themeColors.surfaceSecondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
                 }
             }
             .padding()
@@ -497,7 +532,7 @@ private struct LatePaymentSheet: View {
             Spacer()
 
             Button {
-                onConfirm(Double(penaltyText) ?? 0)
+                onConfirm(paidDate, Double(penaltyText) ?? 0)
                 dismiss()
             } label: {
                 Text("Mark Paid")
@@ -511,7 +546,7 @@ private struct LatePaymentSheet: View {
             .padding()
         }
         .background(themeColors.background)
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
     }
 }
 

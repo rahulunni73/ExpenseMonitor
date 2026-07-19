@@ -69,6 +69,10 @@ struct ExpenseDetailView: View {
                     }
                     .background(themeColors.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    }
                     .padding(.horizontal)
                 }
             }

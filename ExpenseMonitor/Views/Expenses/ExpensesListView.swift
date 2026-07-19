@@ -67,6 +67,10 @@ struct ExpensesListView: View {
                                 .padding(12)
                                 .background(themeColors.surface)
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                                }
                                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)

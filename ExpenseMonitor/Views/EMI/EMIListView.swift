@@ -183,6 +183,10 @@ struct EMIListView: View {
         .padding(12)
         .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        }
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
     }
@@ -223,6 +227,10 @@ struct EMIListView: View {
         .padding(12)
         .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        }
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
     }

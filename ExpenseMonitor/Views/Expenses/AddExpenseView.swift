@@ -143,6 +143,10 @@ struct AddExpenseView: View {
         .padding()
         .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+        }
     }
 
     @ViewBuilder

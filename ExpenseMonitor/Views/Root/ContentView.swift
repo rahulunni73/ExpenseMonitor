@@ -10,23 +10,21 @@ import SwiftData
 
 
 enum AppTab {
-    case expenses, emi, dashboard, reports
-    
+    case home, expenses, emi
+
     var title: String {
         switch self {
+        case .home: return "Home"
         case .expenses: return "Expenses"
         case .emi: return "EMI"
-        case .dashboard: return "Dashboard"
-        case .reports: return "Reports"
         }
     }
-    
+
     var icon: String {
         switch self {
+        case .home: return "house.fill"
         case .expenses: return "list.bullet"
         case .emi: return "creditcard.fill"
-        case .dashboard: return "chart.pie.fill"
-        case .reports: return "chart.bar.fill"
         }
     }
 }
@@ -39,15 +37,24 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
-    @State private var selectedTab: AppTab = .expenses
+    @State private var selectedTab: AppTab = .home
 
     var body: some View {
         VStack(spacing:0){
             ZStack {
-                DashboardView(entitlements: StubEntitlementsProvider())
-                    .opacity(selectedTab == .dashboard ? 1 : 0)
-                    .allowsHitTesting(selectedTab == .dashboard)
-                
+                HomeView(
+                    entitlements: StubEntitlementsProvider(),
+                    expenseRepository: DefaultExpenseRepository(
+                        modelContext: modelContext,
+                        entitlements: StubEntitlementsProvider()
+                    ),
+                    loanRepository: DefaultLoanRepository(modelContext: modelContext),
+                    chitFundRepository: DefaultChitFundRepository(modelContext: modelContext),
+                    isActive: selectedTab == .home
+                )
+                    .opacity(selectedTab == .home ? 1 : 0)
+                    .allowsHitTesting(selectedTab == .home)
+
                 ExpensesListView(
                     repository: DefaultExpenseRepository(
                         modelContext: modelContext,
@@ -70,10 +77,6 @@ struct ContentView: View {
                 )
                 .opacity(selectedTab == .emi ? 1 : 0)
                 .allowsHitTesting(selectedTab == .emi)
-                
-                Text("Reports")
-                    .opacity(selectedTab == .reports ? 1 : 0)
-                    .allowsHitTesting(selectedTab == .reports)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -100,13 +103,17 @@ struct ContentView: View {
 
     private var customTabBar: some View {
         HStack(spacing: 0) {
+            tabButton(.home)
             tabButton(.expenses)
             tabButton(.emi)
-            tabButton(.dashboard)
-            tabButton(.reports)
         }
         .padding(.top, 8)
         .background(themeColors.surface)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.08))
+                .frame(height: 1)
+        }
     }
     
 }
