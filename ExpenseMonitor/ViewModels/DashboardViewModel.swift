@@ -28,9 +28,9 @@ class DashboardViewModel {
     ]
 
     var recentTransactions: [Expense] = [
-        Expense(id: "201", title: "Starbucks", amount: 450, category: "Food", categoryIcon: "fork.knife", categoryColorName: "systemGreen"),
-        Expense(id: "202", title: "Salary", amount: 50000, category: "Salary", type: .income, categoryIcon: "banknote.fill", categoryColorName: "systemGreen"),
-        Expense(id: "203", title: "Petrol", amount: 2800, category: "Transport", categoryIcon: "car.fill", categoryColorName: "systemOrange")
+        Expense(id: "201", title: "Starbucks", amount: 450, category: "Food", categoryIcon: "fork.knife"),
+        Expense(id: "202", title: "Salary", amount: 50000, category: "Salary", type: .income, categoryIcon: "banknote.fill"),
+        Expense(id: "203", title: "Petrol", amount: 2800, category: "Transport", categoryIcon: "car.fill")
     ]
 
     var emiReminderTitle: String = "Home Loan EMI"

@@ -1,0 +1,397 @@
+//
+//  LoanDetailView.swift
+//  ExpenseMonitor
+//
+
+import SwiftUI
+import Charts
+
+struct LoanDetailView: View {
+    let loan: Loan
+    let repository: LoanRepository
+    let expenseRepository: ExpenseRepository
+    var onChange: (() -> Void)? = nil
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
+    @State private var isDeleteConfirmationPresented = false
+    @State private var isLatePaymentSheetPresented = false
+    @State private var pendingLateInstallment: Int?
+    @State private var isEditPresented = false
+
+    private let columns = Array(repeating: GridItem(.flexible()), count: 4)
+
+    private var paidCount: Int {
+        loan.paidInstallments.count
+    }
+
+    private var durationText: String {
+        let start = loan.startDate.formatted(.dateTime.month(.abbreviated).year())
+        let end = loan.endDate.formatted(.dateTime.month(.abbreviated).year())
+        return "\(start) – \(end)"
+    }
+
+    private var progressData: [(String, Double, Color)] {
+        [
+            ("paid", Double(paidCount), themeColors.accent),
+            ("remaining", Double(loan.numberOfInstallments - paidCount), themeColors.surfaceSecondary)
+        ]
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                Spacer()
+                Text(loan.name)
+                    .font(typography.headline)
+                Spacer()
+                Button {
+                    isEditPresented = true
+                } label: {
+                    Image(systemName: "pencil")
+                        .foregroundStyle(themeColors.accent)
+                        .frame(width: 44, height: 44)
+                }
+                Button {
+                    isDeleteConfirmationPresented = true
+                } label: {
+                    Image(systemName: "trash")
+                        .foregroundStyle(Color(.systemRed))
+                        .frame(width: 44, height: 44)
+                }
+            }
+            .padding()
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    summaryCard
+                    detailRows
+
+                    Text("Payment history")
+                        .font(typography.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(loan.installments) { installment in
+                            installmentCell(installment)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.vertical, 16)
+            }
+
+            actionRow
+        }
+        .background(themeColors.background)
+        .confirmationDialog("Delete this loan?", isPresented: $isDeleteConfirmationPresented, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                repository.delete(loan)
+                onChange?()
+                dismiss()
+            }
+        }
+        .sheet(isPresented: $isLatePaymentSheetPresented) {
+            LatePaymentSheet { penalty in
+                confirmLatePayment(penalty: penalty)
+            }
+        }
+        .fullScreenCover(isPresented: $isEditPresented) {
+            AddLoanView(repository: repository, existingLoan: loan, onSave: { onChange?() })
+        }
+    }
+
+    private var summaryCard: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Monthly")
+                        .font(typography.caption)
+                        .foregroundStyle(.secondary)
+                    Text(loan.installmentAmount.currencyFormatted)
+                        .font(typography.amount(size: 20))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Remaining")
+                        .font(typography.caption)
+                        .foregroundStyle(.secondary)
+                    Text(loan.remainingBalance.currencyFormatted)
+                        .font(typography.amount(size: 20))
+                }
+            }
+            Spacer()
+            progressRing
+        }
+        .padding()
+        .background(themeColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+    }
+
+    private var progressRing: some View {
+        ZStack {
+            Chart(progressData, id: \.0) { item in
+                SectorMark(
+                    angle: .value("Count", item.1),
+                    innerRadius: .ratio(0.72)
+                )
+                .foregroundStyle(item.2)
+                .cornerRadius(3)
+            }
+            .frame(width: 96, height: 96)
+
+            VStack(spacing: 0) {
+                Text("\(paidCount)")
+                    .font(typography.subheadlineBold)
+                Text("of \(loan.numberOfInstallments)")
+                    .font(typography.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var detailRows: some View {
+        VStack(spacing: 0) {
+            detailRow("Duration", durationText)
+            Divider().padding(.leading)
+            detailRow("Loan amount", loan.principalAmount.currencyFormatted)
+            Divider().padding(.leading)
+            detailRow("Total payable", loan.totalPayable.currencyFormatted)
+            Divider().padding(.leading)
+            detailRow("Total interest", loan.totalInterest.currencyFormatted, valueColor: themeColors.expense)
+            if loan.totalPenalties > 0 {
+                Divider().padding(.leading)
+                detailRow("Total penalties", loan.totalPenalties.currencyFormatted, valueColor: themeColors.expense)
+            }
+        }
+        .padding(.vertical, 4)
+        .background(themeColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+    }
+
+    private func detailRow(_ label: String, _ value: String, valueColor: Color = .primary) -> some View {
+        HStack {
+            Text(label)
+                .font(typography.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .font(typography.subheadlineBold)
+                .foregroundStyle(valueColor)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+    }
+
+    private func installmentCell(_ installment: LoanInstallment) -> some View {
+        let (background, foreground): (Color, Color) = {
+            switch installment.status {
+            case .paid: return (themeColors.accent, .white)
+            case .overdue: return (themeColors.expense.opacity(0.15), themeColors.expense)
+            case .pending: return (themeColors.surfaceSecondary, .primary)
+            }
+        }()
+        return VStack(spacing: 2) {
+            Text("\(installment.id)")
+                .font(typography.subheadlineBold)
+            Text(installment.dueDate.formatted(.dateTime.day().month(.abbreviated).year(.twoDigits)))
+                .font(typography.caption2)
+                .minimumScaleFactor(0.8)
+                .lineLimit(1)
+        }
+        .foregroundStyle(foreground)
+        .frame(maxWidth: .infinity)
+        .frame(height: 56)
+        .background(background)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(alignment: .topTrailing) {
+            if loan.penaltyAmount(for: installment.id) != nil {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(themeColors.expense)
+                    .padding(4)
+            }
+        }
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 12) {
+            Button {
+                undoLastPayment()
+            } label: {
+                Text("Undo last payment")
+                    .font(typography.subheadlineBold)
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(themeColors.surfaceSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .disabled(paidCount == 0)
+            .opacity(paidCount == 0 ? 0.5 : 1)
+
+            Button {
+                markNextPaid()
+            } label: {
+                Text("Mark next month paid")
+                    .font(typography.subheadlineBold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .background(loan.nextDueInstallment == nil ? Color(.systemGray4) : themeColors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .disabled(loan.nextDueInstallment == nil)
+        }
+        .padding()
+    }
+
+    private func markNextPaid() {
+        guard let next = loan.nextDueInstallment else { return }
+        if next.status == .overdue {
+            pendingLateInstallment = next.id
+            isLatePaymentSheetPresented = true
+        } else {
+            loan.paidInstallments.append(next.id)
+            repository.update(loan)
+            logExpense(installmentNumber: next.id, penalty: 0)
+            onChange?()
+        }
+    }
+
+    private func confirmLatePayment(penalty: Double) {
+        guard let number = pendingLateInstallment else { return }
+        loan.paidInstallments.append(number)
+        if penalty > 0 {
+            loan.penalties.append(InstallmentPenalty(installmentNumber: number, amount: penalty))
+        }
+        repository.update(loan)
+        logExpense(installmentNumber: number, penalty: penalty)
+        onChange?()
+        pendingLateInstallment = nil
+    }
+
+    private func logExpense(installmentNumber: Int, penalty: Double) {
+        let expense = Expense(
+            id: UUID().uuidString,
+            title: "\(loan.name) — EMI Payment",
+            amount: loan.installmentAmount + penalty,
+            category: "Financial & Legal",
+            type: .expense,
+            expenseDate: Date(),
+            note: penalty > 0 ? "Installment #\(installmentNumber) (includes \(penalty.currencyFormatted) late penalty)" : "Installment #\(installmentNumber)",
+            categoryIcon: "creditcard.fill",
+            linkedLoanID: loan.id,
+            linkedInstallmentNumber: installmentNumber
+        )
+        expenseRepository.add(expense)
+    }
+
+    private func removeLinkedExpense(installmentNumber: Int) {
+        if let expense = expenseRepository.fetchAll().first(where: { $0.linkedLoanID == loan.id && $0.linkedInstallmentNumber == installmentNumber }) {
+            expenseRepository.delete(expense)
+        }
+    }
+
+    private func undoLastPayment() {
+        guard let last = loan.paidInstallments.max() else { return }
+        loan.paidInstallments.removeAll { $0 == last }
+        loan.penalties.removeAll { $0.installmentNumber == last }
+        repository.update(loan)
+        removeLinkedExpense(installmentNumber: last)
+        onChange?()
+    }
+}
+
+private struct LatePaymentSheet: View {
+    var onConfirm: (Double) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
+    @State private var penaltyText: String = ""
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                Spacer()
+                Text("Late Payment")
+                    .font(typography.headline)
+                Spacer()
+                Color.clear
+                    .frame(width: 44, height: 44)
+            }
+            .padding()
+
+            VStack(alignment: .leading, spacing: 16) {
+                Text("This installment was due before today. Add a penalty or late fee, if one was charged.")
+                    .font(typography.subheadline)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Penalty Amount (optional)")
+                        .font(typography.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("0", text: $penaltyText)
+                        .keyboardType(.decimalPad)
+                        .padding(12)
+                        .background(themeColors.surfaceSecondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            .padding()
+
+            Spacer()
+
+            Button {
+                onConfirm(Double(penaltyText) ?? 0)
+                dismiss()
+            } label: {
+                Text("Mark Paid")
+                    .font(typography.headline)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(themeColors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding()
+        }
+        .background(themeColors.background)
+        .presentationDetents([.medium])
+    }
+}
+
+#Preview {
+    LoanDetailView(
+        loan: Loan(id: "preview", name: "Home Loan", principalAmount: 250000, installmentAmount: 12500, startDate: Date(), numberOfInstallments: 24),
+        repository: PreviewLoanRepository(),
+        expenseRepository: PreviewExpenseRepository()
+    )
+}
+
+private class PreviewLoanRepository: LoanRepository {
+    func fetchAll() -> [Loan] { [] }
+    func add(_ loan: Loan) {}
+    func update(_ loan: Loan) {}
+    func delete(_ loan: Loan) {}
+}
+
+private class PreviewExpenseRepository: ExpenseRepository {
+    func fetchAll() -> [Expense] { [] }
+    func add(_ expense: Expense) {}
+    func update(_ expense: Expense) {}
+    func delete(_ expense: Expense) {}
+}

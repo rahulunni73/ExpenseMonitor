@@ -15,7 +15,6 @@ struct CreateCategoryView: View {
 
     @State private var name = ""
     @State private var selectedIcon = "tag.fill"
-    @State private var selectedColorName = "systemBlue"
     @State private var type: CategoryType
 
     init(categoryRepository: CategoryRepository, initialType: CategoryType = .expense, onCreate: ((Category) -> Void)? = nil) {
@@ -49,11 +48,6 @@ struct CreateCategoryView: View {
         "paintbrush.fill", "bell.fill", "tag.fill", "envelope.fill", "calendar"
     ]
 
-    private let colorOptions = [
-        "systemBlue", "systemGreen", "systemRed", "systemOrange",
-        "systemPurple", "systemTeal", "systemPink", "systemIndigo"
-    ]
-
     private let gridColumns = Array(repeating: GridItem(.flexible()), count: 5)
 
     var body: some View {
@@ -77,9 +71,9 @@ struct CreateCategoryView: View {
             VStack(spacing: 8) {
                 Image(systemName: selectedIcon)
                     .font(.title)
-                    .foregroundStyle(Category.color(for: selectedColorName))
+                    .foregroundStyle(themeColors.accent)
                     .frame(width: 72, height: 72)
-                    .background(Category.color(for: selectedColorName).opacity(0.15))
+                    .background(themeColors.accent.opacity(0.15))
                     .clipShape(Circle())
                 Text(name.isEmpty ? "New Category" : name)
                     .font(typography.subheadline)
@@ -88,17 +82,9 @@ struct CreateCategoryView: View {
             .padding(.bottom, 12)
 
             ScrollView {
-                VStack(spacing: 20) {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(iconOptions, id: \.self) { icon in
-                            iconSwatch(icon)
-                        }
-                    }
-
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(colorOptions, id: \.self) { colorName in
-                            colorSwatch(colorName)
-                        }
+                LazyVGrid(columns: gridColumns, spacing: 16) {
+                    ForEach(iconOptions, id: \.self) { icon in
+                        iconSwatch(icon)
                     }
                 }
                 .padding()
@@ -140,27 +126,12 @@ struct CreateCategoryView: View {
             }
     }
 
-    private func colorSwatch(_ colorName: String) -> some View {
-        let isSelected = colorName == selectedColorName
-        return Circle()
-            .fill(Category.color(for: colorName))
-            .frame(width: 36, height: 36)
-            .overlay(
-                Circle().stroke(.primary, lineWidth: isSelected ? 2 : 0)
-            )
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selectedColorName = colorName
-            }
-    }
-
     private func save() {
         guard !name.isEmpty else { return }
         let newCategory = Category(
             id: UUID().uuidString,
             name: name,
             icon: selectedIcon,
-            colorName: selectedColorName,
             type: type,
             isSystemDefined: false
         )

@@ -10,6 +10,7 @@ struct CategoryFilterPickerView: View {
     @Binding var selectedCategories: Set<String>
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
     @State private var categories: [Category] = []
@@ -74,9 +75,9 @@ struct CategoryFilterPickerView: View {
         return VStack(spacing: 6) {
             Image(systemName: category.icon)
                 .font(.title3)
-                .foregroundStyle(isSelected ? .white : category.swiftUIColor)
+                .foregroundStyle(isSelected ? .white : themeColors.accent)
                 .frame(width: 56, height: 56)
-                .background(isSelected ? category.swiftUIColor : category.swiftUIColor.opacity(0.15))
+                .background(isSelected ? themeColors.accent : themeColors.accent.opacity(0.15))
                 .clipShape(Circle())
             Text(category.name)
                 .font(typography.caption)
@@ -101,8 +102,8 @@ struct CategoryFilterPickerView: View {
 private class PreviewCategoryRepository: CategoryRepository {
     func fetchAll() -> [Category] {
         [
-            Category(id: "cat-food", name: "Food", icon: "fork.knife", colorName: "systemGreen", type: .expense, isSystemDefined: true),
-            Category(id: "cat-transport", name: "Transport", icon: "car.fill", colorName: "systemBlue", type: .expense, isSystemDefined: true)
+            Category(id: "cat-food", name: "Food", icon: "fork.knife", type: .expense, isSystemDefined: true),
+            Category(id: "cat-transport", name: "Transport", icon: "car.fill", type: .expense, isSystemDefined: true)
         ]
     }
     func add(_ category: Category) {}

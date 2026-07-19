@@ -152,8 +152,8 @@ struct CalendarDayPickerView: View {
         selectedMonth: .constant(Date()),
         selectedDay: .constant(nil),
         expenses: [
-            Expense(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", expenseDate: Date(), categoryIcon: "fork.knife", categoryColorName: "systemGreen"),
-            Expense(id: "2", title: "Salary", amount: 55000, category: "Salary", type: .income, expenseDate: Date(), categoryIcon: "banknote.fill", categoryColorName: "systemGreen")
+            Expense(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", expenseDate: Date(), categoryIcon: "fork.knife"),
+            Expense(id: "2", title: "Salary", amount: 55000, category: "Salary", type: .income, expenseDate: Date(), categoryIcon: "banknote.fill")
         ]
     )
 }

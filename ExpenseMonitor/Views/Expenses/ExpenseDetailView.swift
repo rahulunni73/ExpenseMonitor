@@ -42,9 +42,9 @@ struct ExpenseDetailView: View {
                     VStack(spacing: 12) {
                         Image(systemName: expense.categoryIcon)
                             .font(.title)
-                            .foregroundStyle(Category.color(for: expense.categoryColorName))
+                            .foregroundStyle(themeColors.accent)
                             .frame(width: 72, height: 72)
-                            .background(Category.color(for: expense.categoryColorName).opacity(0.15))
+                            .background(themeColors.accent.opacity(0.15))
                             .clipShape(Circle())
 
                         Text(expense.title)
@@ -127,8 +127,7 @@ struct ExpenseDetailView: View {
             type: .expense,
             expenseDate: Date(),
             note: "Monthly broadband plan",
-            categoryIcon: "house.fill",
-            categoryColorName: "systemBlue"
+            categoryIcon: "house.fill"
         ),
         onEdit: {},
         onDelete: {}

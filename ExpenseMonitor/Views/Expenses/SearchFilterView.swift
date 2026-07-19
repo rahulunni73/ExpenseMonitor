@@ -159,8 +159,8 @@ struct SearchFilterView: View {
 private class PreviewCategoryRepository: CategoryRepository {
     func fetchAll() -> [Category] {
         [
-            Category(id: "cat-food", name: "Food", icon: "fork.knife", colorName: "systemGreen", type: .expense, isSystemDefined: true),
-            Category(id: "cat-transport", name: "Transport", icon: "car.fill", colorName: "systemBlue", type: .expense, isSystemDefined: true)
+            Category(id: "cat-food", name: "Food", icon: "fork.knife", type: .expense, isSystemDefined: true),
+            Category(id: "cat-transport", name: "Transport", icon: "car.fill", type: .expense, isSystemDefined: true)
         ]
     }
     func add(_ category: Category) {}

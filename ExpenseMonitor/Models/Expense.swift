@@ -21,13 +21,16 @@ final class Expense:Identifiable {
     var note: String?
 
     var categoryIcon: String = "tag.fill"
-    var categoryColorName: String = "systemGray"
 
     var serverID: String?
     var isSynced: Bool = false
     var lastModified: Date = Date()
 
-    init(id: String, title: String, amount: Double, category: String, type: CategoryType = .expense, expenseDate: Date = Date(), note: String? = nil, categoryIcon: String = "tag.fill", categoryColorName: String = "systemGray") {
+    var linkedLoanID: String?
+    var linkedChitFundID: String?
+    var linkedInstallmentNumber: Int?
+
+    init(id: String, title: String, amount: Double, category: String, type: CategoryType = .expense, expenseDate: Date = Date(), note: String? = nil, categoryIcon: String = "tag.fill", linkedLoanID: String? = nil, linkedChitFundID: String? = nil, linkedInstallmentNumber: Int? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
@@ -36,7 +39,9 @@ final class Expense:Identifiable {
         self.expenseDate = expenseDate
         self.note = note
         self.categoryIcon = categoryIcon
-        self.categoryColorName = categoryColorName
+        self.linkedLoanID = linkedLoanID
+        self.linkedChitFundID = linkedChitFundID
+        self.linkedInstallmentNumber = linkedInstallmentNumber
     }
-    
+
 }

@@ -16,6 +16,7 @@ struct ExpensesHeaderView: View {
     let totalExpense: Double
     let totalIncome: Double
     let balance: Double
+    var onAddExpense: (() -> Void)? = nil
 
     private enum FullScreenDestination: Identifiable {
         case calendar
@@ -50,6 +51,14 @@ struct ExpensesHeaderView: View {
                     Image(systemName: "calendar")
                         .font(.system(size: 20))
                         .foregroundStyle(.secondary)
+                        .frame(width: 44, height: 44)
+                }
+                Button {
+                    onAddExpense?()
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 20))
+                        .foregroundStyle(themeColors.accent)
                         .frame(width: 44, height: 44)
                 }
             }

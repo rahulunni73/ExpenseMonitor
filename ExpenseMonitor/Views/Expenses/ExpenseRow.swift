@@ -26,9 +26,9 @@ struct ExpenseRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Image(systemName: expense.categoryIcon)
-                .foregroundStyle(Category.color(for: expense.categoryColorName))
+                .foregroundStyle(themeColors.accent)
                 .frame(width: 40, height: 40)
-                .background(Category.color(for: expense.categoryColorName).opacity(0.15))
+                .background(themeColors.accent.opacity(0.15))
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
@@ -65,7 +65,6 @@ struct ExpenseRow: View {
         category: "Food",
         type: .expense,
         expenseDate: Date(),
-        categoryIcon: "fork.knife",
-        categoryColorName: "systemGreen"
+        categoryIcon: "fork.knife"
     ))
 }

@@ -14,7 +14,7 @@ struct ExpensesListView: View {
     let categoryRepository: CategoryRepository
     @State private var viewModel: ExpensesViewModel
     let isActive: Bool
-    let refreshTrigger: Int
+    @State private var isAddExpensePresented = false
     @State private var expenseForDetail: Expense?
     @State private var expenseToEdit: Expense?
     @State private var pendingEditExpense: Expense?
@@ -22,11 +22,10 @@ struct ExpensesListView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(repository: ExpenseRepository, categoryRepository: CategoryRepository, isActive: Bool, refreshTrigger: Int = 0) {
+    init(repository: ExpenseRepository, categoryRepository: CategoryRepository, isActive: Bool) {
         self.repository = repository
         self.categoryRepository = categoryRepository
         self.isActive = isActive
-        self.refreshTrigger = refreshTrigger
         _viewModel = State(initialValue: ExpensesViewModel(repository: repository))
     }
 
@@ -44,7 +43,8 @@ struct ExpensesListView: View {
                 expenses: viewModel.expenses,
                 totalExpense: viewModel.totalExpense,
                 totalIncome: viewModel.totalIncome,
-                balance: viewModel.balance
+                balance: viewModel.balance,
+                onAddExpense: { isAddExpensePresented = true }
             )
 
             // TEMPORARY — dev-only seed button, remove this whole Button once no longer needed.
@@ -100,9 +100,6 @@ struct ExpensesListView: View {
                 viewModel.loadExpenses()
             }
         }
-        .onChange(of: refreshTrigger) { _, _ in
-            viewModel.loadExpenses()
-        }
         .onChange(of: expenseForDetail == nil) { _, isNil in
             if isNil, let pendingEditExpense {
                 expenseToEdit = pendingEditExpense
@@ -127,6 +124,13 @@ struct ExpensesListView: View {
                 repository: repository,
                 categoryRepository: categoryRepository,
                 existingExpense: expense,
+                onSave: { viewModel.loadExpenses() }
+            )
+        }
+        .fullScreenCover(isPresented: $isAddExpensePresented) {
+            AddExpenseView(
+                repository: repository,
+                categoryRepository: categoryRepository,
                 onSave: { viewModel.loadExpenses() }
             )
         }

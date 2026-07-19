@@ -15,6 +15,8 @@ struct ExpenseMonitorApp: App {
         let schema = Schema([
             Expense.self,
             Category.self,
+            Loan.self,
+            ChitFund.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +27,7 @@ struct ExpenseMonitorApp: App {
         }
     }()
 
-    @State private var themeManager = ThemeManager(theme:.noir)
+    @State private var themeManager = ThemeManager(theme:.midnight)
 
     var body: some Scene {
         WindowGroup {

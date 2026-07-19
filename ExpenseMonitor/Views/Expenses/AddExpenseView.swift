@@ -227,9 +227,9 @@ struct AddExpenseView: View {
         return VStack(spacing: 6) {
             Image(systemName: category.icon)
                 .font(.title3)
-                .foregroundStyle(isSelected ? .white : category.swiftUIColor)
+                .foregroundStyle(isSelected ? .white : themeColors.accent)
                 .frame(width: 56, height: 56)
-                .background(isSelected ? category.swiftUIColor : category.swiftUIColor.opacity(0.15))
+                .background(isSelected ? themeColors.accent : themeColors.accent.opacity(0.15))
                 .clipShape(Circle())
             Text(category.name)
                 .font(typography.caption)
@@ -274,7 +274,6 @@ struct AddExpenseView: View {
             existingExpense.type = selectedCategory.type
             existingExpense.expenseDate = date
             existingExpense.categoryIcon = selectedCategory.icon
-            existingExpense.categoryColorName = selectedCategory.colorName
             existingExpense.lastModified = Date()
             repository.update(existingExpense)
         } else {
@@ -286,8 +285,7 @@ struct AddExpenseView: View {
                 type: selectedCategory.type,
                 expenseDate: date,
                 note: nil,
-                categoryIcon: selectedCategory.icon,
-                categoryColorName: selectedCategory.colorName
+                categoryIcon: selectedCategory.icon
             )
             repository.add(newExpense)
         }
@@ -311,8 +309,8 @@ private class PreviewExpenseRepository: ExpenseRepository {
 private class PreviewCategoryRepository: CategoryRepository {
     func fetchAll() -> [Category] {
         [
-            Category(id: "cat-food", name: "Food", icon: "fork.knife", colorName: "systemGreen", type: .expense, isSystemDefined: true),
-            Category(id: "cat-transport", name: "Transport", icon: "car.fill", colorName: "systemBlue", type: .expense, isSystemDefined: true)
+            Category(id: "cat-food", name: "Food", icon: "fork.knife", type: .expense, isSystemDefined: true),
+            Category(id: "cat-transport", name: "Transport", icon: "car.fill", type: .expense, isSystemDefined: true)
         ]
     }
     func add(_ category: Category) {}
