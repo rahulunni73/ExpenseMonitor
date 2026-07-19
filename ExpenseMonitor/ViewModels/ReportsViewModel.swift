@@ -158,4 +158,41 @@ class ReportsViewModel {
         guard currentMonthIncome > 0 else { return nil }
         return (totalDueThisMonth / currentMonthIncome) * 100
     }
+
+    // MARK: Year in Review — only meaningful when browsing a full calendar year with real data.
+
+    var yearInReview: YearInReview? {
+        guard granularity == .year else { return nil }
+        let yearExpenses = filteredExpenses
+        guard !yearExpenses.isEmpty else { return nil }
+
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: referenceDate)
+        let expenseOnly = yearExpenses.filter { $0.type == .expense }
+
+        let topCategory = expenseCategoryBreakdown(from: expenseOnly).first
+
+        let busiestMonth: (label: String, amount: Double)? = Dictionary(grouping: expenseOnly) { calendar.component(.month, from: $0.expenseDate) }
+            .map { month, expenses in (month, expenses.reduce(0) { $0 + $1.amount }) }
+            .max { $0.1 < $1.1 }
+            .map { month, amount in (calendar.monthSymbols[month - 1], amount) }
+
+        let biggestExpense = expenseOnly.max { $0.amount < $1.amount }
+
+        let totalEMIChitPaid = yearExpenses
+            .filter { $0.linkedLoanID != nil || $0.linkedChitFundID != nil }
+            .reduce(0) { $0 + $1.amount }
+
+        return YearInReview(
+            year: year,
+            income: income,
+            expense: expense,
+            netSavings: netBalance,
+            transactionCount: yearExpenses.count,
+            topCategory: topCategory,
+            busiestMonth: busiestMonth,
+            biggestExpense: biggestExpense,
+            totalEMIChitPaid: totalEMIChitPaid
+        )
+    }
 }

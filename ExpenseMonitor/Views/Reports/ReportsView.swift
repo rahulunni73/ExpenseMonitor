@@ -14,6 +14,7 @@ struct ReportsView: View {
 
     @State private var viewModel: ReportsViewModel
     @State private var drillDown: TransactionDrillDown?
+    @State private var yearInReviewToShow: YearInReview?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
@@ -63,6 +64,10 @@ struct ReportsView: View {
                         }
                     }
 
+                    if let review = viewModel.yearInReview {
+                        yearInReviewTeaser(review)
+                    }
+
                     if viewModel.spendingPoints.isEmpty {
                         noExpenseDataView
                     } else {
@@ -103,6 +108,47 @@ struct ReportsView: View {
                 onChange: { viewModel.loadData() }
             )
         }
+        .sheet(item: $yearInReviewToShow) { review in
+            YearInReviewView(review: review)
+        }
+    }
+
+    private func yearInReviewTeaser(_ review: YearInReview) -> some View {
+        Button {
+            yearInReviewToShow = review
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(themeColors.accent)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(String(review.year)) Year in Review")
+                        .font(typography.subheadlineBold)
+                        .foregroundStyle(.primary)
+                    Text("See your year at a glance")
+                        .font(typography.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(themeColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private var noExpenseDataView: some View {

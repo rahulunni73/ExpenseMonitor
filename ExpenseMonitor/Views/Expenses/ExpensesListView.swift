@@ -47,13 +47,6 @@ struct ExpensesListView: View {
                 onAddExpense: { isAddExpensePresented = true }
             )
 
-            // TEMPORARY — dev-only seed button, remove this whole Button once no longer needed.
-            Button("Seed Sample Data (Debug)") {
-                viewModel.seedSampleData()
-            }
-            .font(typography.caption)
-            .padding(.vertical, 4)
-
             if viewModel.groupedExpenses.isEmpty {
                 emptyStateView
             } else {

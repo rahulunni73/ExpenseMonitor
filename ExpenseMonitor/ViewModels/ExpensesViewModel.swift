@@ -95,38 +95,6 @@ class ExpensesViewModel {
         loadExpenses()
     }
 
-    // TEMPORARY — dev-only test data, remove this method once no longer needed.
-    func seedSampleData() {
-        let calendar = Calendar.current
-        let today = Date()
-        func daysAgo(_ n: Int) -> Date { calendar.date(byAdding: .day, value: -n, to: today) ?? today }
-        func monthsAgo(_ n: Int) -> Date { calendar.date(byAdding: .month, value: -n, to: today) ?? today }
-
-        // Category names/icons below are matched exactly to CategoryRepository's
-        // seeded defaults — a mismatch here leaves AddExpenseView unable to find the
-        // category to preselect when editing one of these sample expenses.
-        let samples: [Expense] = [
-            Expense(id: UUID().uuidString, title: "Grocery Shopping", amount: 1450, category: "Food & Dining", expenseDate: today, categoryIcon: "fork.knife"),
-            Expense(id: UUID().uuidString, title: "Uber Ride", amount: 320, category: "Transportation", expenseDate: daysAgo(2), categoryIcon: "car.fill"),
-            Expense(id: UUID().uuidString, title: "Netflix Subscription", amount: 649, category: "Entertainment & Leisure", expenseDate: daysAgo(5), categoryIcon: "film.fill"),
-            Expense(id: UUID().uuidString, title: "Electricity Bill", amount: 2100, category: "Housing & Utilities", expenseDate: monthsAgo(1), categoryIcon: "house.fill"),
-            Expense(id: UUID().uuidString, title: "Coffee with Friends", amount: 280, category: "Food & Dining", expenseDate: daysAgo(1), categoryIcon: "fork.knife"),
-            Expense(id: UUID().uuidString, title: "Gym Membership", amount: 1800, category: "Health & Fitness", expenseDate: monthsAgo(1), categoryIcon: "heart.fill"),
-            Expense(id: UUID().uuidString, title: "Amazon Order", amount: 3499, category: "Shopping & Personal Care", expenseDate: daysAgo(10), categoryIcon: "bag.fill"),
-            Expense(id: UUID().uuidString, title: "Petrol", amount: 1200, category: "Transportation", expenseDate: daysAgo(3), categoryIcon: "car.fill"),
-            Expense(id: UUID().uuidString, title: "Movie Tickets", amount: 600, category: "Entertainment & Leisure", expenseDate: monthsAgo(2), categoryIcon: "film.fill"),
-            Expense(id: UUID().uuidString, title: "Mobile Recharge", amount: 399, category: "Housing & Utilities", expenseDate: today, categoryIcon: "house.fill"),
-            Expense(id: UUID().uuidString, title: "Dinner Out", amount: 950, category: "Food & Dining", expenseDate: daysAgo(7), categoryIcon: "fork.knife"),
-            Expense(id: UUID().uuidString, title: "Doctor Visit", amount: 700, category: "Health & Fitness", expenseDate: monthsAgo(1), categoryIcon: "heart.fill"),
-            Expense(id: UUID().uuidString, title: "Book Purchase", amount: 540, category: "Education & Work", expenseDate: daysAgo(15), categoryIcon: "book.fill"),
-            Expense(id: UUID().uuidString, title: "Flight Booking", amount: 8200, category: "Shopping & Personal Care", expenseDate: monthsAgo(2), categoryIcon: "bag.fill"),
-            Expense(id: UUID().uuidString, title: "Home Wi-Fi Bill", amount: 999, category: "Housing & Utilities", expenseDate: today, categoryIcon: "house.fill"),
-            Expense(id: UUID().uuidString, title: "Salary", amount: 55000, category: "Salary", type: .income, expenseDate: today, categoryIcon: "banknote.fill")
-        ]
-        samples.forEach { repository.add($0) }
-        loadExpenses()
-    }
-
     func deleteItems(from sectionExpenses: [Expense], at offsets: IndexSet) {
         beginPendingDeletion(offsets.map { sectionExpenses[$0] })
     }

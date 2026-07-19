@@ -83,18 +83,4 @@ enum NotificationService {
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         return UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
     }
-
-    /// Debug-only: fires a generic reminder ~5 seconds out so the whole permission → schedule →
-    /// deliver pipeline can be seen working without waiting for a real due date. Not wired to any
-    /// real loan/chit data — remove once the feature has been manually verified end to end.
-    static func sendTestReminder() {
-        let content = UNMutableNotificationContent()
-        content.title = "Test Reminder"
-        content.body = "This is what an EMI reminder notification looks like."
-        content.sound = .default
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-        let request = UNNotificationRequest(identifier: "emi-reminder-test", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
-    }
 }

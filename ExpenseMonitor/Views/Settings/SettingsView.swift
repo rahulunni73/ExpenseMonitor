@@ -128,15 +128,6 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.vertical, 4)
-
-                    if emiRemindersEnabled {
-                        Button {
-                            NotificationService.sendTestReminder()
-                        } label: {
-                            settingsActionRow(icon: "hammer.fill", iconColor: Color(.systemGray), title: "Send Test Reminder (Debug)")
-                        }
-                        .buttonStyle(.plain)
-                    }
                 } header: {
                     Text("Notifications")
                 } footer: {
