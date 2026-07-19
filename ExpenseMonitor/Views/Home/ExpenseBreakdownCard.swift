@@ -10,6 +10,7 @@ import Charts
 
 struct ExpenseBreakdownCard: View {
     let data: [CategoryBreakdown]
+    var onSelectCategory: ((String) -> Void)? = nil
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
@@ -44,6 +45,10 @@ struct ExpenseBreakdownCard: View {
                             Spacer()
                             Text("\(Int(item.percent))%")
                                 .foregroundStyle(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onSelectCategory?(item.category)
                         }
                     }
                 }

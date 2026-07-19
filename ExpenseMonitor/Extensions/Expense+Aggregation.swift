@@ -15,7 +15,7 @@ func expenseSpendingPoints(from expenses: [Expense]) -> [SpendingPoint] {
     let grouped = Dictionary(grouping: expenses) { calendar.startOfDay(for: $0.expenseDate) }
     return grouped.keys.sorted().map { day in
         let total = (grouped[day] ?? []).reduce(0) { $0 + $1.amount }
-        return SpendingPoint(day: day.formatted(.dateTime.day().month(.abbreviated)), amount: total)
+        return SpendingPoint(day: day.formatted(.dateTime.day().month(.abbreviated)), amount: total, date: day)
     }
 }
 

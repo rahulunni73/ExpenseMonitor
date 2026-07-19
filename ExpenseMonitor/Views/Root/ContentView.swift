@@ -48,6 +48,7 @@ struct ContentView: View {
                         modelContext: modelContext,
                         entitlements: StubEntitlementsProvider()
                     ),
+                    categoryRepository: DefaultCategoryRepository(modelContext: modelContext),
                     loanRepository: DefaultLoanRepository(modelContext: modelContext),
                     chitFundRepository: DefaultChitFundRepository(modelContext: modelContext),
                     isActive: selectedTab == .home

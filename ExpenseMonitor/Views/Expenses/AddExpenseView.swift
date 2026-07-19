@@ -318,4 +318,6 @@ private class PreviewCategoryRepository: CategoryRepository {
         ]
     }
     func add(_ category: Category) {}
+    func update(_ category: Category) {}
+    func delete(_ category: Category) {}
 }

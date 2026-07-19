@@ -148,4 +148,6 @@ struct ExpensesHeaderView: View {
 private class PreviewCategoryRepository: CategoryRepository {
     func fetchAll() -> [Category] { [] }
     func add(_ category: Category) {}
+    func update(_ category: Category) {}
+    func delete(_ category: Category) {}
 }

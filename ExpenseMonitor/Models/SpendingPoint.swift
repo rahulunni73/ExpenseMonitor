@@ -12,4 +12,5 @@ struct SpendingPoint: Identifiable {
     let id = UUID()
     let day: String
     let amount: Double
+    let date: Date
 }

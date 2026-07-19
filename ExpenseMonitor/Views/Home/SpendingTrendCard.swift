@@ -10,6 +10,9 @@ import Charts
 
 struct SpendingTrendCard: View {
     let points: [SpendingPoint]
+    var onSelectPoint: ((SpendingPoint) -> Void)? = nil
+
+    @State private var selectedDay: String?
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
@@ -27,9 +30,10 @@ struct SpendingTrendCard: View {
                 )
                 .foregroundStyle(themeColors.accent)
                 .cornerRadius(4)
-                
+
             }
             .frame(height: 180)
+            .chartXSelection(value: $selectedDay)
         }
         .padding()
         .background(themeColors.surface)
@@ -38,15 +42,20 @@ struct SpendingTrendCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
         }
+        .onChange(of: selectedDay) { _, newValue in
+            guard let newValue, let point = points.first(where: { $0.day == newValue }) else { return }
+            onSelectPoint?(point)
+            selectedDay = nil
+        }
     }
 }
 
 #Preview {
     SpendingTrendCard(points: [
-        SpendingPoint(day: "1 Jun", amount: 400),
-        SpendingPoint(day: "8 Jun", amount: 650),
-        SpendingPoint(day: "15 Jun", amount: 250),
-        SpendingPoint(day: "22 Jun", amount: 900),
-        SpendingPoint(day: "30 Jun", amount: 1100)
+        SpendingPoint(day: "1 Jun", amount: 400, date: Date()),
+        SpendingPoint(day: "8 Jun", amount: 650, date: Date()),
+        SpendingPoint(day: "15 Jun", amount: 250, date: Date()),
+        SpendingPoint(day: "22 Jun", amount: 900, date: Date()),
+        SpendingPoint(day: "30 Jun", amount: 1100, date: Date())
     ])
 }

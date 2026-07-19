@@ -9,6 +9,8 @@ import SwiftData
 protocol CategoryRepository {
     func fetchAll() -> [Category]
     func add(_ category: Category)
+    func update(_ category: Category)
+    func delete(_ category: Category)
 }
 
 class DefaultCategoryRepository: CategoryRepository {
@@ -32,6 +34,15 @@ class DefaultCategoryRepository: CategoryRepository {
 
     func add(_ category: Category) {
         modelContext.insert(category)
+        try? modelContext.save()
+    }
+
+    func update(_ category: Category) {
+        try? modelContext.save()
+    }
+
+    func delete(_ category: Category) {
+        modelContext.delete(category)
         try? modelContext.save()
     }
 

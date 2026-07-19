@@ -8,6 +8,9 @@ import SwiftUI
 struct PeriodChipStrip: View {
     @Binding var granularity: ReportGranularity
     @Binding var referenceDate: Date
+    @Binding var customRange: DateInterval?
+
+    @State private var isCustomRangeSheetPresented = false
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
@@ -19,19 +22,22 @@ struct PeriodChipStrip: View {
         case .week: return 26
         case .month: return 24
         case .year: return 10
+        case .custom: return 0
         }
     }
 
     private var chipDates: [Date] {
         let calendar = Calendar.current
-        let todayStart = calendar.dateInterval(of: granularity.calendarComponent, for: Date())?.start ?? Date()
+        let component = granularity.calendarComponent ?? .month
+        let todayStart = calendar.dateInterval(of: component, for: Date())?.start ?? Date()
         return (0..<chipCount).reversed().compactMap { offset in
-            calendar.date(byAdding: granularity.calendarComponent, value: -offset, to: todayStart)
+            calendar.date(byAdding: component, value: -offset, to: todayStart)
         }
     }
 
     private var selectedRangeText: String {
-        guard let interval = Calendar.current.dateInterval(of: granularity.calendarComponent, for: referenceDate) else { return "" }
+        guard let component = granularity.calendarComponent,
+              let interval = Calendar.current.dateInterval(of: component, for: referenceDate) else { return "" }
         switch granularity {
         case .week:
             let end = Calendar.current.date(byAdding: .day, value: -1, to: interval.end) ?? interval.end
@@ -40,7 +46,15 @@ struct PeriodChipStrip: View {
             return referenceDate.formatted(.dateTime.month(.wide).year())
         case .year:
             return referenceDate.formatted(.dateTime.year())
+        case .custom:
+            return ""
         }
+    }
+
+    private var customRangeText: String {
+        guard let customRange else { return "Select date range" }
+        let end = Calendar.current.date(byAdding: .day, value: -1, to: customRange.end) ?? customRange.end
+        return "\(customRange.start.formatted(.dateTime.day().month(.abbreviated).year())) – \(end.formatted(.dateTime.day().month(.abbreviated).year()))"
     }
 
     var body: some View {
@@ -52,35 +66,67 @@ struct PeriodChipStrip: View {
             }
             .pickerStyle(.segmented)
 
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(chipDates, id: \.self) { date in
-                            chip(for: date)
-                                .id(date)
+            if granularity == .custom {
+                customRangeTrigger
+            } else {
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(chipDates, id: \.self) { date in
+                                chip(for: date)
+                                    .id(date)
+                            }
                         }
                     }
+                    .onAppear {
+                        scrollToSelected(proxy)
+                    }
+                    .onChange(of: granularity) { _, _ in
+                        scrollToSelected(proxy)
+                    }
+                    .onChange(of: referenceDate) { _, _ in
+                        scrollToSelected(proxy)
+                    }
                 }
-                .onAppear {
-                    scrollToSelected(proxy)
-                }
-                .onChange(of: granularity) { _, _ in
-                    scrollToSelected(proxy)
-                }
-                .onChange(of: referenceDate) { _, _ in
-                    scrollToSelected(proxy)
-                }
-            }
 
-            Text(selectedRangeText)
-                .font(typography.caption)
-                .foregroundStyle(.secondary)
+                Text(selectedRangeText)
+                    .font(typography.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .sheet(isPresented: $isCustomRangeSheetPresented) {
+            CustomDateRangeSheet(initialRange: customRange) { start, end in
+                let calendar = Calendar.current
+                let startOfDay = calendar.startOfDay(for: start)
+                let endExclusive = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: end)) ?? end
+                customRange = DateInterval(start: startOfDay, end: endExclusive)
+            }
         }
     }
 
+    private var customRangeTrigger: some View {
+        Button {
+            isCustomRangeSheetPresented = true
+        } label: {
+            HStack {
+                Text(customRangeText)
+                    .font(typography.subheadline)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: "calendar")
+                    .foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .background(themeColors.surfaceSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func scrollToSelected(_ proxy: ScrollViewProxy) {
+        let component = granularity.calendarComponent ?? .month
         let match = chipDates.first {
-            Calendar.current.isDate($0, equalTo: referenceDate, toGranularity: granularity.calendarComponent)
+            Calendar.current.isDate($0, equalTo: referenceDate, toGranularity: component)
         }
         if let match {
             proxy.scrollTo(match, anchor: .trailing)
@@ -88,7 +134,8 @@ struct PeriodChipStrip: View {
     }
 
     private func chip(for date: Date) -> some View {
-        let isSelected = Calendar.current.isDate(date, equalTo: referenceDate, toGranularity: granularity.calendarComponent)
+        let component = granularity.calendarComponent ?? .month
+        let isSelected = Calendar.current.isDate(date, equalTo: referenceDate, toGranularity: component)
         return Text(label(for: date))
             .font(typography.subheadline(emphasized: isSelected))
             .foregroundStyle(isSelected ? .white : .primary)
@@ -104,7 +151,7 @@ struct PeriodChipStrip: View {
 
     private func periodsAgo(_ date: Date) -> Int {
         let calendar = Calendar.current
-        let component = granularity.calendarComponent
+        let component = granularity.calendarComponent ?? .month
         guard let todayStart = calendar.dateInterval(of: component, for: Date())?.start,
               let dateStart = calendar.dateInterval(of: component, for: date)?.start else { return 0 }
         return calendar.dateComponents([component], from: dateStart, to: todayStart).value(for: component) ?? 0
@@ -131,11 +178,13 @@ struct PeriodChipStrip: View {
             case 1: return "Last Year"
             default: return date.formatted(.dateTime.year())
             }
+        case .custom:
+            return ""
         }
     }
 }
 
 #Preview {
-    PeriodChipStrip(granularity: .constant(.month), referenceDate: .constant(Date()))
+    PeriodChipStrip(granularity: .constant(.month), referenceDate: .constant(Date()), customRange: .constant(nil))
         .padding()
 }

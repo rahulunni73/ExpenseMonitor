@@ -9,12 +9,15 @@ enum ReportGranularity: String, CaseIterable {
     case week = "Week"
     case month = "Month"
     case year = "Year"
+    case custom = "Custom"
 
-    var calendarComponent: Calendar.Component {
+    /// nil for `.custom` — an arbitrary range has no matching calendar unit.
+    var calendarComponent: Calendar.Component? {
         switch self {
         case .week: return .weekOfYear
         case .month: return .month
         case .year: return .year
+        case .custom: return nil
         }
     }
 }
@@ -31,6 +34,7 @@ class ReportsViewModel {
 
     var granularity: ReportGranularity = .month
     var referenceDate: Date = Date()
+    var customRange: DateInterval?
 
     init(expenseRepository: ExpenseRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
         self.expenseRepository = expenseRepository
@@ -46,13 +50,30 @@ class ReportsViewModel {
     }
 
     var periodInterval: DateInterval {
-        Calendar.current.dateInterval(of: granularity.calendarComponent, for: referenceDate)
+        if granularity == .custom {
+            return customRange ?? DateInterval(start: referenceDate, duration: 0)
+        }
+        guard let component = granularity.calendarComponent else {
+            return DateInterval(start: referenceDate, duration: 0)
+        }
+        return Calendar.current.dateInterval(of: component, for: referenceDate)
             ?? DateInterval(start: referenceDate, duration: 0)
     }
 
+    /// For calendar granularities, "previous" means the prior calendar unit (handles Feb being
+    /// shorter than Jan, etc). For a custom range, there's no calendar unit to shift by, so
+    /// "previous" is defined as an equal-duration window immediately before the picked range.
     private var previousPeriodInterval: DateInterval {
-        let previousReferenceDate = Calendar.current.date(byAdding: granularity.calendarComponent, value: -1, to: referenceDate) ?? referenceDate
-        return Calendar.current.dateInterval(of: granularity.calendarComponent, for: previousReferenceDate)
+        if granularity == .custom {
+            let interval = periodInterval
+            let previousStart = interval.start.addingTimeInterval(-interval.duration)
+            return DateInterval(start: previousStart, end: interval.start)
+        }
+        guard let component = granularity.calendarComponent else {
+            return DateInterval(start: referenceDate, duration: 0)
+        }
+        let previousReferenceDate = Calendar.current.date(byAdding: component, value: -1, to: referenceDate) ?? referenceDate
+        return Calendar.current.dateInterval(of: component, for: previousReferenceDate)
             ?? DateInterval(start: previousReferenceDate, duration: 0)
     }
 
@@ -86,6 +107,14 @@ class ReportsViewModel {
         expenseCategoryBreakdown(from: filteredExpenses.filter { $0.type == .expense })
     }
 
+    func expenses(onDate date: Date) -> [Expense] {
+        filteredExpenses.filter { $0.type == .expense && Calendar.current.isDate($0.expenseDate, inSameDayAs: date) }
+    }
+
+    func expenses(inCategory category: String) -> [Expense] {
+        filteredExpenses.filter { $0.type == .expense && $0.category == category }
+    }
+
     private var previousExpense: Double {
         previousPeriodExpenses.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
     }
@@ -101,11 +130,13 @@ class ReportsViewModel {
     }
 
     func goToPreviousPeriod() {
-        referenceDate = Calendar.current.date(byAdding: granularity.calendarComponent, value: -1, to: referenceDate) ?? referenceDate
+        guard let component = granularity.calendarComponent else { return }
+        referenceDate = Calendar.current.date(byAdding: component, value: -1, to: referenceDate) ?? referenceDate
     }
 
     func goToNextPeriod() {
-        referenceDate = Calendar.current.date(byAdding: granularity.calendarComponent, value: 1, to: referenceDate) ?? referenceDate
+        guard let component = granularity.calendarComponent else { return }
+        referenceDate = Calendar.current.date(byAdding: component, value: 1, to: referenceDate) ?? referenceDate
     }
 
     // MARK: EMI/Chit burden — always the real current calendar month, independent of the browsed period above.

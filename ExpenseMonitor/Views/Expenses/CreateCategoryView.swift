@@ -7,20 +7,26 @@ import SwiftUI
 
 struct CreateCategoryView: View {
     let categoryRepository: CategoryRepository
+    var expenseRepository: ExpenseRepository? = nil
+    var existingCategory: Category? = nil
     var onCreate: ((Category) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    @State private var name = ""
-    @State private var selectedIcon = "tag.fill"
+    @State private var name: String
+    @State private var selectedIcon: String
     @State private var type: CategoryType
 
-    init(categoryRepository: CategoryRepository, initialType: CategoryType = .expense, onCreate: ((Category) -> Void)? = nil) {
+    init(categoryRepository: CategoryRepository, expenseRepository: ExpenseRepository? = nil, existingCategory: Category? = nil, initialType: CategoryType = .expense, onCreate: ((Category) -> Void)? = nil) {
         self.categoryRepository = categoryRepository
+        self.expenseRepository = expenseRepository
+        self.existingCategory = existingCategory
         self.onCreate = onCreate
-        _type = State(initialValue: initialType)
+        _type = State(initialValue: existingCategory?.type ?? initialType)
+        _name = State(initialValue: existingCategory?.name ?? "")
+        _selectedIcon = State(initialValue: existingCategory?.icon ?? "tag.fill")
     }
 
     private let iconOptions = [
@@ -57,6 +63,11 @@ struct CreateCategoryView: View {
                     dismiss()
                 }
                 Spacer()
+                Text(existingCategory == nil ? "New Category" : "Edit Category")
+                    .font(typography.headline)
+                Spacer()
+                Color.clear
+                    .frame(width: 44, height: 44)
             }
             .padding()
 
@@ -128,15 +139,32 @@ struct CreateCategoryView: View {
 
     private func save() {
         guard !name.isEmpty else { return }
-        let newCategory = Category(
-            id: UUID().uuidString,
-            name: name,
-            icon: selectedIcon,
-            type: type,
-            isSystemDefined: false
-        )
-        categoryRepository.add(newCategory)
-        onCreate?(newCategory)
+        if let existingCategory {
+            let oldName = existingCategory.name
+            existingCategory.name = name
+            existingCategory.icon = selectedIcon
+            existingCategory.type = type
+            categoryRepository.update(existingCategory)
+
+            if let expenseRepository {
+                for expense in expenseRepository.fetchAll() where expense.category == oldName {
+                    expense.category = name
+                    expense.categoryIcon = selectedIcon
+                    expenseRepository.update(expense)
+                }
+            }
+            onCreate?(existingCategory)
+        } else {
+            let newCategory = Category(
+                id: UUID().uuidString,
+                name: name,
+                icon: selectedIcon,
+                type: type,
+                isSystemDefined: false
+            )
+            categoryRepository.add(newCategory)
+            onCreate?(newCategory)
+        }
         dismiss()
     }
 }
@@ -148,4 +176,6 @@ struct CreateCategoryView: View {
 private class PreviewCategoryRepository: CategoryRepository {
     func fetchAll() -> [Category] { [] }
     func add(_ category: Category) {}
+    func update(_ category: Category) {}
+    func delete(_ category: Category) {}
 }

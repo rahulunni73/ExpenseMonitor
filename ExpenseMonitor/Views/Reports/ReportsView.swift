@@ -8,17 +8,20 @@ import SwiftData
 
 struct ReportsView: View {
     let expenseRepository: ExpenseRepository
+    let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
 
     @State private var viewModel: ReportsViewModel
+    @State private var drillDown: TransactionDrillDown?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(expenseRepository: ExpenseRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
+    init(expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
         self.expenseRepository = expenseRepository
+        self.categoryRepository = categoryRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
         _viewModel = State(initialValue: ReportsViewModel(
@@ -43,7 +46,7 @@ struct ReportsView: View {
             }
             .padding()
 
-            PeriodChipStrip(granularity: $viewModel.granularity, referenceDate: $viewModel.referenceDate)
+            PeriodChipStrip(granularity: $viewModel.granularity, referenceDate: $viewModel.referenceDate, customRange: $viewModel.customRange)
                 .padding(.horizontal)
 
             ScrollView {
@@ -63,9 +66,19 @@ struct ReportsView: View {
                     if viewModel.spendingPoints.isEmpty {
                         noExpenseDataView
                     } else {
-                        SpendingTrendCard(points: viewModel.spendingPoints)
+                        SpendingTrendCard(points: viewModel.spendingPoints) { point in
+                            drillDown = TransactionDrillDown(
+                                title: point.day,
+                                expenses: viewModel.expenses(onDate: point.date)
+                            )
+                        }
 
-                        ExpenseBreakdownCard(data: viewModel.breakdownData)
+                        ExpenseBreakdownCard(data: viewModel.breakdownData) { category in
+                            drillDown = TransactionDrillDown(
+                                title: category,
+                                expenses: viewModel.expenses(inCategory: category)
+                            )
+                        }
                     }
 
                     if let burden = viewModel.burdenPercent {
@@ -80,6 +93,15 @@ struct ReportsView: View {
         .background(themeColors.background)
         .onAppear {
             viewModel.loadData()
+        }
+        .sheet(item: $drillDown) { drillDown in
+            TransactionListSheet(
+                title: drillDown.title,
+                expenses: drillDown.expenses,
+                expenseRepository: expenseRepository,
+                categoryRepository: categoryRepository,
+                onChange: { viewModel.loadData() }
+            )
         }
     }
 
@@ -113,6 +135,7 @@ struct ReportsView: View {
             case .week: return "last week"
             case .month: return "last month"
             case .year: return "last year"
+            case .custom: return "the previous period"
             }
         }()
         return HStack(spacing: 4) {
@@ -125,13 +148,20 @@ struct ReportsView: View {
     }
 }
 
+private struct TransactionDrillDown: Identifiable {
+    let id = UUID()
+    let title: String
+    let expenses: [Expense]
+}
+
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self, Loan.self, ChitFund.self,
+        for: Expense.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     ReportsView(
         expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
+        categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
         loanRepository: DefaultLoanRepository(modelContext: container.mainContext),
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext)
     )

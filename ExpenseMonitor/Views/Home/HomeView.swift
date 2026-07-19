@@ -12,6 +12,7 @@ struct HomeView : View {
 
     let entitlements: EntitlementsProviding
     let expenseRepository: ExpenseRepository
+    let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
     let isActive: Bool
@@ -23,9 +24,10 @@ struct HomeView : View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(entitlements: EntitlementsProviding, expenseRepository: ExpenseRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool) {
+    init(entitlements: EntitlementsProviding, expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool) {
         self.entitlements = entitlements
         self.expenseRepository = expenseRepository
+        self.categoryRepository = categoryRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
         self.isActive = isActive
@@ -102,11 +104,18 @@ struct HomeView : View {
             }
         }
         .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView(entitlements: entitlements)
+            SettingsView(
+                entitlements: entitlements,
+                expenseRepository: expenseRepository,
+                categoryRepository: categoryRepository,
+                loanRepository: loanRepository,
+                chitFundRepository: chitFundRepository
+            )
         }
         .fullScreenCover(isPresented: $isReportsPresented) {
             ReportsView(
                 expenseRepository: expenseRepository,
+                categoryRepository: categoryRepository,
                 loanRepository: loanRepository,
                 chitFundRepository: chitFundRepository
             )
@@ -125,6 +134,7 @@ struct HomeView : View {
     HomeView(
         entitlements: StubEntitlementsProvider(),
         expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
+        categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
         loanRepository: DefaultLoanRepository(modelContext: container.mainContext),
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext),
         isActive: true
