@@ -30,6 +30,7 @@ struct SettingsView: View {
     @State private var isManageCategoriesPresented = false
     @State private var isThemePickerPresented = false
     @AppStorage("emiRemindersEnabled") private var emiRemindersEnabled = false
+    @AppStorage("debtsTabEnabled") private var debtsTabEnabled = false
     @State private var isNotificationPermissionDeniedAlertPresented = false
 
     private var appVersion: String {
@@ -113,6 +114,25 @@ struct SettingsView: View {
 
                 Section("Preferences") {
                     settingsRow(icon: "indianrupeesign.circle.fill", iconColor: Color(.systemGreen), title: "Currency", detail: "INR (₹)")
+                }
+
+                Section {
+                    Toggle(isOn: $debtsTabEnabled) {
+                        HStack {
+                            Image(systemName: "person.2.fill")
+                                .foregroundStyle(.white)
+                                .frame(width: 28, height: 28)
+                                .background(Color(.systemTeal))
+                                .clipShape(RoundedRectangle(cornerRadius: 7))
+                            Text("Debts Tab")
+                                .font(typography.body)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Features")
+                } footer: {
+                    Text("Show a Debts tab for tracking informal money owed to you or by you, separate from EMIs and regular transactions.")
                 }
 
                 Section {

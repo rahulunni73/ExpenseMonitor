@@ -179,7 +179,7 @@ struct AddTransactionView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
-                    .background(isValid ? Color(.systemGreen) : Color(.systemGray4))
+                    .background(isValid ? themeColors.accent : Color(.systemGray4))
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)

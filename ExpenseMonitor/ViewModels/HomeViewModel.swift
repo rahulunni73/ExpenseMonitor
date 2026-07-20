@@ -10,15 +10,18 @@ class HomeViewModel {
     private let transactionRepository: TransactionRepository
     private let loanRepository: LoanRepository
     private let chitFundRepository: ChitFundRepository
+    private let debtRepository: DebtRepository
 
     private var transactions: [Transaction] = []
     private var loans: [Loan] = []
     private var chitFunds: [ChitFund] = []
+    private var debts: [Debt] = []
 
-    init(transactionRepository: TransactionRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
+    init(transactionRepository: TransactionRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, debtRepository: DebtRepository) {
         self.transactionRepository = transactionRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
+        self.debtRepository = debtRepository
         loadData()
     }
 
@@ -26,6 +29,7 @@ class HomeViewModel {
         transactions = transactionRepository.fetchAll()
         loans = loanRepository.fetchAll()
         chitFunds = chitFundRepository.fetchAll()
+        debts = debtRepository.fetchAll()
     }
 
     private var currentMonthTransactions: [Transaction] {
@@ -97,5 +101,13 @@ class HomeViewModel {
                 return chitIDs.contains(linkedChitFundID)
             }
             .reduce(0) { $0 + $1.amount }
+    }
+
+    var totalOwedToMe: Double {
+        debts.filter { $0.direction == .owedToMe && !$0.isSettled }.reduce(0) { $0 + $1.remainingAmount }
+    }
+
+    var totalOwedByMe: Double {
+        debts.filter { $0.direction == .owedByMe && !$0.isSettled }.reduce(0) { $0 + $1.remainingAmount }
     }
 }

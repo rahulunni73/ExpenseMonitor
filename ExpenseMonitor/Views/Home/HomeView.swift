@@ -15,28 +15,32 @@ struct HomeView : View {
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
+    let debtRepository: DebtRepository
     let isActive: Bool
     var onViewAllTransactions: (() -> Void)? = nil
 
     @State private var viewModel: HomeViewModel
     @State private var isSettingsPresented = false
     @State private var isReportsPresented = false
+    @AppStorage("debtsTabEnabled") private var debtsTabEnabled = false
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(entitlements: EntitlementsProviding, transactionRepository: TransactionRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool, onViewAllTransactions: (() -> Void)? = nil) {
+    init(entitlements: EntitlementsProviding, transactionRepository: TransactionRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, debtRepository: DebtRepository, isActive: Bool, onViewAllTransactions: (() -> Void)? = nil) {
         self.entitlements = entitlements
         self.transactionRepository = transactionRepository
         self.categoryRepository = categoryRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
+        self.debtRepository = debtRepository
         self.isActive = isActive
         self.onViewAllTransactions = onViewAllTransactions
         _viewModel = State(initialValue: HomeViewModel(
             transactionRepository: transactionRepository,
             loanRepository: loanRepository,
-            chitFundRepository: chitFundRepository
+            chitFundRepository: chitFundRepository,
+            debtRepository: debtRepository
         ))
     }
 
@@ -75,23 +79,23 @@ struct HomeView : View {
                         expense: viewModel.expense
                     )
 
-                    if viewModel.hasLoans || viewModel.hasCreditCards || viewModel.hasChitFunds {
-                        LoanChitSummaryCard(
-                            showLoans: viewModel.hasLoans,
-                            loanDue: viewModel.loanDueAmount,
-                            loanPaid: viewModel.loanPaidAmount,
-                            showCreditCards: viewModel.hasCreditCards,
-                            creditCardDue: viewModel.creditCardDueAmount,
-                            creditCardPaid: viewModel.creditCardPaidAmount,
-                            showChitFunds: viewModel.hasChitFunds,
-                            chitDue: viewModel.chitDueAmount,
-                            chitPaid: viewModel.chitPaidAmount
-                        )
+                    LoanChitSummaryCard(
+                        showLoans: viewModel.hasLoans,
+                        loanDue: viewModel.loanDueAmount,
+                        loanPaid: viewModel.loanPaidAmount,
+                        showCreditCards: viewModel.hasCreditCards,
+                        creditCardDue: viewModel.creditCardDueAmount,
+                        creditCardPaid: viewModel.creditCardPaidAmount,
+                        showChitFunds: viewModel.hasChitFunds,
+                        chitDue: viewModel.chitDueAmount,
+                        chitPaid: viewModel.chitPaidAmount
+                    )
+
+                    if debtsTabEnabled {
+                        DebtsSummaryCard(owedToMe: viewModel.totalOwedToMe, owedByMe: viewModel.totalOwedByMe)
                     }
 
-                    if !viewModel.recentTransactions.isEmpty {
-                        RecentTransactionsCard(transactions: viewModel.recentTransactions, onViewAll: onViewAllTransactions)
-                    }
+                    RecentTransactionsCard(transactions: viewModel.recentTransactions, onViewAll: onViewAllTransactions)
                 }
 
             }
@@ -129,7 +133,7 @@ struct HomeView : View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Transaction.self, Category.self, Loan.self, ChitFund.self,
+        for: Transaction.self, Category.self, Loan.self, ChitFund.self, Debt.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     HomeView(
@@ -138,6 +142,7 @@ struct HomeView : View {
         categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
         loanRepository: DefaultLoanRepository(modelContext: container.mainContext),
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext),
+        debtRepository: DefaultDebtRepository(modelContext: container.mainContext),
         isActive: true
     )
 }

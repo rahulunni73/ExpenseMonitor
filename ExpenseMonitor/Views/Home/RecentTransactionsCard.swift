@@ -18,21 +18,27 @@ struct RecentTransactionsCard: View {
                 Text("Recent Transactions")
                     .font(typography.headline)
                 Spacer()
-                Button {
-                    onViewAll?()
-                } label: {
-                    Text("View All")
-                        .font(typography.subheadline)
-                        .foregroundStyle(themeColors.accent)
+                if !transactions.isEmpty {
+                    Button {
+                        onViewAll?()
+                    } label: {
+                        Text("View All")
+                            .font(typography.subheadline)
+                            .foregroundStyle(themeColors.accent)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
 
-            VStack(spacing: 8) {
-                ForEach(transactions) { transaction in
-                    TransactionRow(transaction: transaction)
-                    if transaction.id != transactions.last?.id {
-                        Divider()
+            if transactions.isEmpty {
+                emptyStateView
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(transactions) { transaction in
+                        TransactionRow(transaction: transaction)
+                        if transaction.id != transactions.last?.id {
+                            Divider()
+                        }
                     }
                 }
             }
@@ -44,6 +50,19 @@ struct RecentTransactionsCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
         }
+    }
+
+    private var emptyStateView: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "tray")
+                .font(.system(size: 20))
+                .foregroundStyle(.secondary)
+            Text("No transactions yet")
+                .font(typography.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.vertical, 8)
     }
 }
 

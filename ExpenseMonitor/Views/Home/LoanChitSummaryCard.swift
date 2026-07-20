@@ -26,17 +26,21 @@ struct LoanChitSummaryCard: View {
             Text("Loans & Chit Funds")
                 .font(typography.headline)
 
-            VStack(spacing: 0) {
-                if showLoans {
-                    row(icon: "banknote.fill", label: "EMI", due: loanDue, paid: loanPaid)
-                }
-                if showCreditCards {
-                    if showLoans { Divider() }
-                    row(icon: "creditcard.fill", label: "Credit Card", due: creditCardDue, paid: creditCardPaid)
-                }
-                if showChitFunds {
-                    if showLoans || showCreditCards { Divider() }
-                    row(icon: "person.3.fill", label: "Chit Funds", due: chitDue, paid: chitPaid)
+            if !showLoans && !showCreditCards && !showChitFunds {
+                emptyStateView
+            } else {
+                VStack(spacing: 0) {
+                    if showLoans {
+                        row(icon: "banknote.fill", label: "EMI", due: loanDue, paid: loanPaid)
+                    }
+                    if showCreditCards {
+                        if showLoans { Divider() }
+                        row(icon: "creditcard.fill", label: "Credit Card", due: creditCardDue, paid: creditCardPaid)
+                    }
+                    if showChitFunds {
+                        if showLoans || showCreditCards { Divider() }
+                        row(icon: "person.3.fill", label: "Chit Funds", due: chitDue, paid: chitPaid)
+                    }
                 }
             }
         }
@@ -72,6 +76,19 @@ struct LoanChitSummaryCard: View {
                     .font(typography.caption)
                     .foregroundStyle(themeColors.income)
             }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private var emptyStateView: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "creditcard")
+                .font(.system(size: 20))
+                .foregroundStyle(.secondary)
+            Text("No loans or chit funds tracked yet")
+                .font(typography.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
         }
         .padding(.vertical, 8)
     }

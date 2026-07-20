@@ -16,6 +16,7 @@ struct ExpenseMonitorApp: App {
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
+    let debtRepository: DebtRepository
 
     @State private var themeManager = ThemeManager()
 
@@ -25,6 +26,7 @@ struct ExpenseMonitorApp: App {
             Category.self,
             Loan.self,
             ChitFund.self,
+            Debt.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -44,6 +46,7 @@ struct ExpenseMonitorApp: App {
         categoryRepository = DefaultCategoryRepository(modelContext: context)
         loanRepository = DefaultLoanRepository(modelContext: context)
         chitFundRepository = DefaultChitFundRepository(modelContext: context)
+        debtRepository = DefaultDebtRepository(modelContext: context)
     }
 
     var body: some Scene {
@@ -56,6 +59,7 @@ struct ExpenseMonitorApp: App {
                 .environment(\.categoryRepository, categoryRepository)
                 .environment(\.loanRepository, loanRepository)
                 .environment(\.chitFundRepository, chitFundRepository)
+                .environment(\.debtRepository, debtRepository)
         }
         .modelContainer(sharedModelContainer)
     }

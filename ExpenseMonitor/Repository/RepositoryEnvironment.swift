@@ -48,6 +48,13 @@ private struct EmptyChitFundRepository: ChitFundRepository {
     func delete(_ chitFund: ChitFund) {}
 }
 
+private struct EmptyDebtRepository: DebtRepository {
+    func fetchAll() -> [Debt] { [] }
+    func add(_ debt: Debt) {}
+    func update(_ debt: Debt) {}
+    func delete(_ debt: Debt) {}
+}
+
 private struct TransactionRepositoryKey: EnvironmentKey {
     static let defaultValue: TransactionRepository = EmptyTransactionRepository()
 }
@@ -62,6 +69,10 @@ private struct LoanRepositoryKey: EnvironmentKey {
 
 private struct ChitFundRepositoryKey: EnvironmentKey {
     static let defaultValue: ChitFundRepository = EmptyChitFundRepository()
+}
+
+private struct DebtRepositoryKey: EnvironmentKey {
+    static let defaultValue: DebtRepository = EmptyDebtRepository()
 }
 
 extension EnvironmentValues {
@@ -83,5 +94,10 @@ extension EnvironmentValues {
     var chitFundRepository: ChitFundRepository {
         get { self[ChitFundRepositoryKey.self] }
         set { self[ChitFundRepositoryKey.self] = newValue }
+    }
+
+    var debtRepository: DebtRepository {
+        get { self[DebtRepositoryKey.self] }
+        set { self[DebtRepositoryKey.self] = newValue }
     }
 }

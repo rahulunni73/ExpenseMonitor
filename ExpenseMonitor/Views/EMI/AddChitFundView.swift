@@ -83,7 +83,7 @@ struct AddChitFundView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(isValid ? Color(.systemGreen) : Color(.systemGray4))
+                    .background(isValid ? themeColors.accent : Color(.systemGray4))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .disabled(!isValid)
