@@ -8,7 +8,7 @@ import SwiftUI
 struct CalendarDayPickerView: View {
     @Binding var selectedMonth: Date
     @Binding var selectedDay: Date?
-    let expenses: [Expense]
+    let transactions: [Transaction]
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
@@ -19,10 +19,10 @@ struct CalendarDayPickerView: View {
 
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
 
-    init(selectedMonth: Binding<Date>, selectedDay: Binding<Date?>, expenses: [Expense]) {
+    init(selectedMonth: Binding<Date>, selectedDay: Binding<Date?>, transactions: [Transaction]) {
         self._selectedMonth = selectedMonth
         self._selectedDay = selectedDay
-        self.expenses = expenses
+        self.transactions = transactions
         _displayedMonth = State(initialValue: selectedMonth.wrappedValue)
     }
 
@@ -102,10 +102,10 @@ struct CalendarDayPickerView: View {
 
     private func netAmount(for day: Int) -> Double? {
         guard let date = Calendar.current.date(byAdding: .day, value: day - 1, to: firstOfDisplayedMonth) else { return nil }
-        let dayExpenses = expenses.filter { Calendar.current.isDate($0.expenseDate, inSameDayAs: date) }
-        guard !dayExpenses.isEmpty else { return nil }
-        return dayExpenses.reduce(0) { partial, expense in
-            partial + (expense.type == .income ? expense.amount : -expense.amount)
+        let dayTransactions = transactions.filter { Calendar.current.isDate($0.date, inSameDayAs: date) }
+        guard !dayTransactions.isEmpty else { return nil }
+        return dayTransactions.reduce(0) { partial, transaction in
+            partial + (transaction.type == .income ? transaction.amount : -transaction.amount)
         }
     }
 
@@ -151,9 +151,9 @@ struct CalendarDayPickerView: View {
     CalendarDayPickerView(
         selectedMonth: .constant(Date()),
         selectedDay: .constant(nil),
-        expenses: [
-            Expense(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", expenseDate: Date(), categoryIcon: "fork.knife"),
-            Expense(id: "2", title: "Salary", amount: 55000, category: "Salary", type: .income, expenseDate: Date(), categoryIcon: "banknote.fill")
+        transactions: [
+            Transaction(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", date: Date(), categoryIcon: "fork.knife"),
+            Transaction(id: "2", title: "Salary", amount: 55000, category: "Salary", type: .income, date: Date(), categoryIcon: "banknote.fill")
         ]
     )
 }

@@ -1,12 +1,12 @@
 //
-//  ExpenseDetailView.swift
+//  TransactionDetailView.swift
 //  ExpenseMonitor
 //
 
 import SwiftUI
 
-struct ExpenseDetailView: View {
-    let expense: Expense
+struct TransactionDetailView: View {
+    let transaction: Transaction
     var onEdit: () -> Void
     var onDelete: () -> Void
 
@@ -15,11 +15,11 @@ struct ExpenseDetailView: View {
     @Environment(\.typography) private var typography
 
     private var amountColor: Color {
-        expense.type == .income ? themeColors.income : themeColors.expense
+        transaction.type == .income ? themeColors.income : themeColors.expense
     }
 
     private var amountPrefix: String {
-        expense.type == .income ? "+" : "-"
+        transaction.type == .income ? "+" : "-"
     }
 
     var body: some View {
@@ -29,7 +29,7 @@ struct ExpenseDetailView: View {
                     dismiss()
                 }
                 Spacer()
-                Text("Expense")
+                Text("Transaction")
                     .font(typography.headline)
                 Spacer()
                 Color.clear
@@ -40,29 +40,29 @@ struct ExpenseDetailView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     VStack(spacing: 12) {
-                        Image(systemName: expense.categoryIcon)
+                        Image(systemName: transaction.categoryIcon)
                             .font(.title)
                             .foregroundStyle(themeColors.accent)
                             .frame(width: 72, height: 72)
                             .background(themeColors.accent.opacity(0.15))
                             .clipShape(Circle())
 
-                        Text(expense.title)
+                        Text(transaction.title)
                             .font(typography.title3Bold)
 
-                        Text("\(amountPrefix)\(expense.amount.currencyFormatted)")
+                        Text("\(amountPrefix)\(transaction.amount.currencyFormatted)")
                             .font(typography.amount(size: 34))
                             .foregroundStyle(amountColor)
                     }
                     .padding(.top, 12)
 
                     VStack(spacing: 0) {
-                        detailRow(label: "Category", value: expense.category)
+                        detailRow(label: "Category", value: transaction.category)
                         Divider().padding(.leading)
-                        detailRow(label: "Type", value: expense.type == .income ? "Income" : "Expense")
+                        detailRow(label: "Type", value: transaction.type == .income ? "Income" : "Expense")
                         Divider().padding(.leading)
-                        detailRow(label: "Date", value: expense.expenseDate.formatted(date: .abbreviated, time: .shortened))
-                        if let note = expense.note, !note.isEmpty {
+                        detailRow(label: "Date", value: transaction.date.formatted(date: .abbreviated, time: .shortened))
+                        if let note = transaction.note, !note.isEmpty {
                             Divider().padding(.leading)
                             detailRow(label: "Note", value: note)
                         }
@@ -122,14 +122,14 @@ struct ExpenseDetailView: View {
 }
 
 #Preview {
-    ExpenseDetailView(
-        expense: Expense(
+    TransactionDetailView(
+        transaction: Transaction(
             id: "preview",
             title: "Home Wi-Fi Bill",
             amount: 999,
             category: "Housing & Utilities",
             type: .expense,
-            expenseDate: Date(),
+            date: Date(),
             note: "Monthly broadband plan",
             categoryIcon: "house.fill"
         ),

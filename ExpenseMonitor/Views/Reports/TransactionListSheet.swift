@@ -7,24 +7,24 @@ import SwiftUI
 
 struct TransactionListSheet: View {
     let title: String
-    let expenses: [Expense]
+    let transactions: [Transaction]
     var onChange: (() -> Void)? = nil
 
-    @State private var currentExpenses: [Expense]
-    @State private var expenseForDetail: Expense?
-    @State private var expenseToEdit: Expense?
-    @State private var pendingEditExpense: Expense?
+    @State private var currentTransactions: [Transaction]
+    @State private var transactionForDetail: Transaction?
+    @State private var transactionToEdit: Transaction?
+    @State private var pendingEditTransaction: Transaction?
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
-    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.transactionRepository) private var transactionRepository
 
-    init(title: String, expenses: [Expense], onChange: (() -> Void)? = nil) {
+    init(title: String, transactions: [Transaction], onChange: (() -> Void)? = nil) {
         self.title = title
-        self.expenses = expenses
+        self.transactions = transactions
         self.onChange = onChange
-        _currentExpenses = State(initialValue: expenses)
+        _currentTransactions = State(initialValue: transactions)
     }
 
     var body: some View {
@@ -42,14 +42,14 @@ struct TransactionListSheet: View {
             }
             .padding()
 
-            if currentExpenses.isEmpty {
+            if currentTransactions.isEmpty {
                 emptyView
             } else {
                 ScrollView {
                     VStack(spacing: 8) {
-                        ForEach(currentExpenses) { expense in
-                            ExpenseRow(expense: expense) {
-                                expenseForDetail = expense
+                        ForEach(currentTransactions) { transaction in
+                            TransactionRow(transaction: transaction) {
+                                transactionForDetail = transaction
                             }
                             .padding(12)
                             .background(themeColors.surface)
@@ -65,30 +65,30 @@ struct TransactionListSheet: View {
             }
         }
         .background(themeColors.background)
-        .onChange(of: expenseForDetail == nil) { _, isNil in
-            if isNil, let pendingEditExpense {
-                expenseToEdit = pendingEditExpense
-                self.pendingEditExpense = nil
+        .onChange(of: transactionForDetail == nil) { _, isNil in
+            if isNil, let pendingEditTransaction {
+                transactionToEdit = pendingEditTransaction
+                self.pendingEditTransaction = nil
             }
         }
-        .fullScreenCover(item: $expenseForDetail) { expense in
-            ExpenseDetailView(
-                expense: expense,
+        .fullScreenCover(item: $transactionForDetail) { transaction in
+            TransactionDetailView(
+                transaction: transaction,
                 onEdit: {
-                    pendingEditExpense = expense
-                    expenseForDetail = nil
+                    pendingEditTransaction = transaction
+                    transactionForDetail = nil
                 },
                 onDelete: {
-                    expenseRepository.delete(expense)
-                    currentExpenses.removeAll { $0.id == expense.id }
-                    expenseForDetail = nil
+                    transactionRepository.delete(transaction)
+                    currentTransactions.removeAll { $0.id == transaction.id }
+                    transactionForDetail = nil
                     onChange?()
                 }
             )
         }
-        .fullScreenCover(item: $expenseToEdit) { expense in
-            AddExpenseView(
-                existingExpense: expense,
+        .fullScreenCover(item: $transactionToEdit) { transaction in
+            AddTransactionView(
+                existingTransaction: transaction,
                 onSave: { onChange?() }
             )
         }
@@ -109,19 +109,19 @@ struct TransactionListSheet: View {
 #Preview {
     TransactionListSheet(
         title: "Food & Dining",
-        expenses: [
-            Expense(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", categoryIcon: "fork.knife")
+        transactions: [
+            Transaction(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", categoryIcon: "fork.knife")
         ]
     )
-    .environment(\.expenseRepository, PreviewExpenseRepository())
+    .environment(\.transactionRepository, PreviewTransactionRepository())
     .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
-private class PreviewExpenseRepository: ExpenseRepository {
-    func fetchAll() -> [Expense] { [] }
-    func add(_ expense: Expense) {}
-    func update(_ expense: Expense) {}
-    func delete(_ expense: Expense) {}
+private class PreviewTransactionRepository: TransactionRepository {
+    func fetchAll() -> [Transaction] { [] }
+    func add(_ transaction: Transaction) {}
+    func update(_ transaction: Transaction) {}
+    func delete(_ transaction: Transaction) {}
 }
 
 private class PreviewCategoryRepository: CategoryRepository {

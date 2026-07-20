@@ -12,7 +12,7 @@ import SwiftData
 struct ExpenseMonitorApp: App {
 
     let sharedModelContainer: ModelContainer
-    let expenseRepository: ExpenseRepository
+    let transactionRepository: TransactionRepository
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
@@ -21,7 +21,7 @@ struct ExpenseMonitorApp: App {
 
     init() {
         let schema = Schema([
-            Expense.self,
+            Transaction.self,
             Category.self,
             Loan.self,
             ChitFund.self,
@@ -40,7 +40,7 @@ struct ExpenseMonitorApp: App {
         // every screen in the app pulls these from the environment instead of taking them as
         // init params.
         let context = container.mainContext
-        expenseRepository = DefaultExpenseRepository(modelContext: context, entitlements: StubEntitlementsProvider())
+        transactionRepository = DefaultTransactionRepository(modelContext: context, entitlements: StubEntitlementsProvider())
         categoryRepository = DefaultCategoryRepository(modelContext: context)
         loanRepository = DefaultLoanRepository(modelContext: context)
         chitFundRepository = DefaultChitFundRepository(modelContext: context)
@@ -52,7 +52,7 @@ struct ExpenseMonitorApp: App {
                 .environment(themeManager)
                 .environment(\.themeColors, themeManager.currentTheme.colors)
                 .environment(\.typography, themeManager.currentTypography)
-                .environment(\.expenseRepository, expenseRepository)
+                .environment(\.transactionRepository, transactionRepository)
                 .environment(\.categoryRepository, categoryRepository)
                 .environment(\.loanRepository, loanRepository)
                 .environment(\.chitFundRepository, chitFundRepository)

@@ -1,5 +1,5 @@
 //
-//  Expense.swift
+//  Transaction.swift
 //  ExpenseMonitor
 //
 //  Created by Ospyn on 14/07/26.
@@ -10,14 +10,14 @@ import Foundation
 
 
 @Model
-final class Expense:Identifiable {
+final class Transaction:Identifiable {
     
     var id: String
     var title: String
     var amount: Double
     var category: String
     var type: CategoryType
-    var expenseDate: Date
+    var date: Date
     var note: String?
 
     var categoryIcon: String = "tag.fill"
@@ -30,13 +30,13 @@ final class Expense:Identifiable {
     var linkedChitFundID: String?
     var linkedInstallmentNumber: Int?
 
-    init(id: String, title: String, amount: Double, category: String, type: CategoryType = .expense, expenseDate: Date = Date(), note: String? = nil, categoryIcon: String = "tag.fill", linkedLoanID: String? = nil, linkedChitFundID: String? = nil, linkedInstallmentNumber: Int? = nil) {
+    init(id: String, title: String, amount: Double, category: String, type: CategoryType = .expense, date: Date = Date(), note: String? = nil, categoryIcon: String = "tag.fill", linkedLoanID: String? = nil, linkedChitFundID: String? = nil, linkedInstallmentNumber: Int? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
         self.category = category
         self.type = type
-        self.expenseDate = expenseDate
+        self.date = date
         self.note = note
         self.categoryIcon = categoryIcon
         self.linkedLoanID = linkedLoanID

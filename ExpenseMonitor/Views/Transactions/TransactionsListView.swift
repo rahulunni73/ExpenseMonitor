@@ -1,5 +1,5 @@
 //
-//  ExpensesListView.swift
+//  TransactionsListView.swift
 //  ExpenseMonitor
 //
 //  Created by Ospyn on 14/07/26.
@@ -8,51 +8,51 @@
 import SwiftUI
 import SwiftData
 
-struct ExpensesListView: View {
+struct TransactionsListView: View {
 
-    let repository: ExpenseRepository
-    @State private var viewModel: ExpensesViewModel
+    let repository: TransactionRepository
+    @State private var viewModel: TransactionsViewModel
     let isActive: Bool
-    @State private var isAddExpensePresented = false
-    @State private var expenseForDetail: Expense?
-    @State private var expenseToEdit: Expense?
-    @State private var pendingEditExpense: Expense?
+    @State private var isAddTransactionPresented = false
+    @State private var transactionForDetail: Transaction?
+    @State private var transactionToEdit: Transaction?
+    @State private var pendingEditTransaction: Transaction?
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(repository: ExpenseRepository, isActive: Bool) {
+    init(repository: TransactionRepository, isActive: Bool) {
         self.repository = repository
         self.isActive = isActive
-        _viewModel = State(initialValue: ExpensesViewModel(repository: repository))
+        _viewModel = State(initialValue: TransactionsViewModel(repository: repository))
     }
 
     var body: some View {
         @Bindable var viewModel = viewModel
 
         VStack(spacing: 0) {
-            ExpensesHeaderView(
+            TransactionsHeaderView(
                 selectedMonth: $viewModel.selectedMonth,
                 selectedDay: $viewModel.selectedDay,
                 searchText: $viewModel.searchText,
                 typeFilter: $viewModel.typeFilter,
                 categoryFilters: $viewModel.categoryFilters,
-                expenses: viewModel.expenses,
+                transactions: viewModel.transactions,
                 totalExpense: viewModel.totalExpense,
                 totalIncome: viewModel.totalIncome,
                 balance: viewModel.balance,
-                onAddExpense: { isAddExpensePresented = true }
+                onAddTransaction: { isAddTransactionPresented = true }
             )
 
-            if viewModel.groupedExpenses.isEmpty {
+            if viewModel.groupedTransactions.isEmpty {
                 emptyStateView
             } else {
                 List {
-                    ForEach(viewModel.groupedExpenses) { section in
+                    ForEach(viewModel.groupedTransactions) { section in
                         Section {
-                            ForEach(section.expenses) { expense in
-                                ExpenseRow(expense: expense) {
-                                    expenseForDetail = expense
+                            ForEach(section.transactions) { transaction in
+                                TransactionRow(transaction: transaction) {
+                                    transactionForDetail = transaction
                                 }
                                 .padding(12)
                                 .background(themeColors.surface)
@@ -66,7 +66,7 @@ struct ExpensesListView: View {
                                 .listRowSeparator(.hidden)
                             }
                             .onDelete { offsets in
-                                viewModel.deleteItems(from: section.expenses, at: offsets)
+                                viewModel.deleteItems(from: section.transactions, at: offsets)
                             }
                         } header: {
                             Text(section.title)
@@ -83,59 +83,59 @@ struct ExpensesListView: View {
         .background(themeColors.backgroundGradient)
         .overlay(alignment: .bottom) {
             if let pendingDeletion = viewModel.pendingDeletion {
-                undoBanner(count: pendingDeletion.expenses.count)
+                undoBanner(count: pendingDeletion.transactions.count)
             }
         }
         .onAppear {
-            viewModel.loadExpenses()
+            viewModel.loadTransactions()
         }
         .onChange(of: isActive) { _, newValue in
             if newValue {
-                viewModel.loadExpenses()
+                viewModel.loadTransactions()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .expensesDidChange)) { _ in
-            viewModel.loadExpenses()
+        .onReceive(NotificationCenter.default.publisher(for: .transactionsDidChange)) { _ in
+            viewModel.loadTransactions()
         }
-        .onChange(of: expenseForDetail == nil) { _, isNil in
-            if isNil, let pendingEditExpense {
-                expenseToEdit = pendingEditExpense
-                self.pendingEditExpense = nil
+        .onChange(of: transactionForDetail == nil) { _, isNil in
+            if isNil, let pendingEditTransaction {
+                transactionToEdit = pendingEditTransaction
+                self.pendingEditTransaction = nil
             }
         }
-        .fullScreenCover(item: $expenseForDetail) { expense in
-            ExpenseDetailView(
-                expense: expense,
+        .fullScreenCover(item: $transactionForDetail) { transaction in
+            TransactionDetailView(
+                transaction: transaction,
                 onEdit: {
-                    pendingEditExpense = expense
-                    expenseForDetail = nil
+                    pendingEditTransaction = transaction
+                    transactionForDetail = nil
                 },
                 onDelete: {
-                    viewModel.deleteExpense(expense)
-                    expenseForDetail = nil
+                    viewModel.deleteTransaction(transaction)
+                    transactionForDetail = nil
                 }
             )
         }
-        .fullScreenCover(item: $expenseToEdit) { expense in
-            AddExpenseView(
-                existingExpense: expense,
-                onSave: { viewModel.loadExpenses() }
+        .fullScreenCover(item: $transactionToEdit) { transaction in
+            AddTransactionView(
+                existingTransaction: transaction,
+                onSave: { viewModel.loadTransactions() }
             )
         }
-        .fullScreenCover(isPresented: $isAddExpensePresented) {
-            AddExpenseView(onSave: { viewModel.loadExpenses() })
+        .fullScreenCover(isPresented: $isAddTransactionPresented) {
+            AddTransactionView(onSave: { viewModel.loadTransactions() })
         }
     }
 
     private var emptyStateView: some View {
         VStack(spacing: 12) {
-            Image(systemName: viewModel.expenses.isEmpty ? "tray" : "line.3.horizontal.decrease.circle")
+            Image(systemName: viewModel.transactions.isEmpty ? "tray" : "line.3.horizontal.decrease.circle")
                 .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text(viewModel.expenses.isEmpty ? "No expenses yet" : "No matching expenses")
+            Text(viewModel.transactions.isEmpty ? "No transactions yet" : "No matching transactions")
                 .font(typography.headline)
-            Text(viewModel.expenses.isEmpty
-                 ? "Tap the + button to add your first expense."
+            Text(viewModel.transactions.isEmpty
+                 ? "Tap the + button to add your first transaction."
                  : "Try adjusting your filters or search.")
                 .font(typography.subheadline)
                 .foregroundStyle(.secondary)
@@ -147,7 +147,7 @@ struct ExpensesListView: View {
 
     private func undoBanner(count: Int) -> some View {
         HStack {
-            Text(count == 1 ? "Expense deleted" : "\(count) expenses deleted")
+            Text(count == 1 ? "Transaction deleted" : "\(count) transactions deleted")
                 .font(typography.subheadline)
                 .foregroundStyle(.white)
             Spacer()
@@ -168,11 +168,11 @@ struct ExpensesListView: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self, Category.self,
+        for: Transaction.self, Category.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
-    ExpensesListView(
-        repository: DefaultExpenseRepository(
+    TransactionsListView(
+        repository: DefaultTransactionRepository(
             modelContext: container.mainContext,
             entitlements: StubEntitlementsProvider()
         ),

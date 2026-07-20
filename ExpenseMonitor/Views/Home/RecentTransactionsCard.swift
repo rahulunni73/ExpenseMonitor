@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct RecentTransactionsCard: View {
-    let transactions: [Expense]
+    let transactions: [Transaction]
     var onViewAll: (() -> Void)? = nil
 
     @Environment(\.themeColors) private var themeColors
@@ -30,7 +30,7 @@ struct RecentTransactionsCard: View {
 
             VStack(spacing: 8) {
                 ForEach(transactions) { transaction in
-                    ExpenseRow(expense: transaction)
+                    TransactionRow(transaction: transaction)
                     if transaction.id != transactions.last?.id {
                         Divider()
                     }
@@ -49,8 +49,8 @@ struct RecentTransactionsCard: View {
 
 #Preview {
     RecentTransactionsCard(transactions: [
-        Expense(id: "201", title: "Starbucks", amount: 450, category: "Food", categoryIcon: "fork.knife"),
-        Expense(id: "202", title: "Salary", amount: 50000, category: "Salary", type: .income, categoryIcon: "banknote.fill"),
-        Expense(id: "203", title: "Petrol", amount: 2800, category: "Transport", categoryIcon: "car.fill")
+        Transaction(id: "201", title: "Starbucks", amount: 450, category: "Food", categoryIcon: "fork.knife"),
+        Transaction(id: "202", title: "Salary", amount: 50000, category: "Salary", type: .income, categoryIcon: "banknote.fill"),
+        Transaction(id: "203", title: "Petrol", amount: 2800, category: "Transport", categoryIcon: "car.fill")
     ])
 }

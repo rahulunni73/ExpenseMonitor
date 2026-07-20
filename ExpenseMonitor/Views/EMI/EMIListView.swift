@@ -9,6 +9,13 @@ import SwiftData
 private enum EMISegment: String, CaseIterable {
     case loans = "Loans"
     case chitFunds = "Chit Funds"
+
+    var icon: String {
+        switch self {
+        case .loans: return "banknote.fill"
+        case .chitFunds: return "person.3.fill"
+        }
+    }
 }
 
 struct EMIListView: View {
@@ -23,6 +30,7 @@ struct EMIListView: View {
     @State private var isAddChitFundPresented = false
     @State private var loanForDetail: Loan?
     @State private var chitFundForDetail: ChitFund?
+    @Namespace private var glassNamespace
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
@@ -57,12 +65,13 @@ struct EMIListView: View {
             .padding(.horizontal)
             .padding(.top)
 
-            Picker("", selection: $segment) {
-                ForEach(EMISegment.allCases, id: \.self) { segment in
-                    Text(segment.rawValue).tag(segment)
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach(EMISegment.allCases, id: \.self) { option in
+                        segmentButton(option)
+                    }
                 }
             }
-            .pickerStyle(.segmented)
             .padding(.horizontal)
             .padding(.bottom, 8)
 
@@ -95,6 +104,31 @@ struct EMIListView: View {
         .fullScreenCover(item: $chitFundForDetail, onDismiss: { chitFundViewModel.loadChitFunds(); rescheduleReminders() }) { chitFund in
             ChitFundDetailView(chitFund: chitFund, onChange: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
         }
+    }
+
+    private func segmentButton(_ option: EMISegment) -> some View {
+        let isSelected = segment == option
+        return Button {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
+                segment = option
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: option.icon)
+                Text(option.rawValue)
+            }
+            .font(typography.subheadline(emphasized: isSelected))
+            .foregroundStyle(isSelected ? .white : .primary)
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(themeColors.accent).interactive() : .regular.interactive(),
+            in: Capsule()
+        )
+        .matchedGeometryEffect(id: isSelected ? "emiSegmentIndicator" : "\(option.rawValue)-idle", in: glassNamespace)
     }
 
     private func rescheduleReminders() {
@@ -158,7 +192,7 @@ struct EMIListView: View {
     private func loanCard(_ loan: Loan, onTap: @escaping () -> Void) -> some View {
         let next = loan.nextDueInstallment
         return HStack(spacing: 12) {
-            Image(systemName: loan.type == .creditCard ? "creditcard.fill" : "banknote.fill")
+            Image(systemName: loan.type.icon)
                 .foregroundStyle(themeColors.accent)
                 .frame(width: 44, height: 44)
                 .background(themeColors.accent.opacity(0.15))
@@ -179,7 +213,7 @@ struct EMIListView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 Text(loan.installmentAmount.currencyFormatted)
                     .font(typography.amount(size: 15))
-                statusBadge(next?.status ?? .paid)
+                statusBadge(next?.status ?? .paid, dueDate: next?.dueDate)
             }
         }
         .padding(12)
@@ -222,7 +256,7 @@ struct EMIListView: View {
                         .font(typography.caption2)
                         .foregroundStyle(themeColors.income)
                 } else {
-                    statusBadge(next?.status ?? .paid)
+                    statusBadge(next?.status ?? .paid, dueDate: next?.dueDate)
                 }
             }
         }
@@ -237,12 +271,13 @@ struct EMIListView: View {
         .onTapGesture(perform: onTap)
     }
 
-    private func statusBadge(_ status: LoanInstallment.Status) -> some View {
+    private func statusBadge(_ status: LoanInstallment.Status, dueDate: Date?) -> some View {
+        let formattedDate = dueDate.map { $0.formatted(.dateTime.day().month(.abbreviated)) }
         let (label, color): (String, Color) = {
             switch status {
             case .paid: return ("All Paid", themeColors.income)
-            case .pending: return ("Upcoming", .secondary)
-            case .overdue: return ("Overdue", themeColors.expense)
+            case .pending: return (formattedDate.map { "Due \($0)" } ?? "Upcoming", .secondary)
+            case .overdue: return (formattedDate.map { "Overdue since \($0)" } ?? "Overdue", themeColors.expense)
             }
         }()
         return Text(label)
@@ -250,12 +285,13 @@ struct EMIListView: View {
             .foregroundStyle(color)
     }
 
-    private func statusBadge(_ status: ChitContribution.Status) -> some View {
+    private func statusBadge(_ status: ChitContribution.Status, dueDate: Date?) -> some View {
+        let formattedDate = dueDate.map { $0.formatted(.dateTime.day().month(.abbreviated)) }
         let (label, color): (String, Color) = {
             switch status {
             case .paid: return ("All Paid", themeColors.income)
-            case .pending: return ("Upcoming", .secondary)
-            case .overdue: return ("Overdue", themeColors.expense)
+            case .pending: return (formattedDate.map { "Due \($0)" } ?? "Upcoming", .secondary)
+            case .overdue: return (formattedDate.map { "Overdue since \($0)" } ?? "Overdue", themeColors.expense)
             }
         }()
         return Text(label)
@@ -266,7 +302,7 @@ struct EMIListView: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Loan.self, ChitFund.self, Expense.self,
+        for: Loan.self, ChitFund.self, Transaction.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     EMIListView(
@@ -274,5 +310,5 @@ struct EMIListView: View {
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext),
         isActive: true
     )
-    .environment(\.expenseRepository, DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
+    .environment(\.transactionRepository, DefaultTransactionRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
 }

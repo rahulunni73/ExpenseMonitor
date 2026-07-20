@@ -10,12 +10,12 @@ import SwiftData
 
 
 enum AppTab {
-    case home, expenses, emi
+    case home, transactions, emi
 
     var title: String {
         switch self {
         case .home: return "Home"
-        case .expenses: return "Expenses"
+        case .transactions: return "Transactions"
         case .emi: return "EMI"
         }
     }
@@ -23,7 +23,7 @@ enum AppTab {
     var icon: String {
         switch self {
         case .home: return "house.fill"
-        case .expenses: return "list.bullet"
+        case .transactions: return "arrow.up.arrow.down"
         case .emi: return "creditcard.fill"
         }
     }
@@ -35,83 +35,51 @@ enum AppTab {
 struct ContentView: View {
 
     @Environment(\.themeColors) private var themeColors
-    @Environment(\.typography) private var typography
-    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.transactionRepository) private var transactionRepository
     @Environment(\.categoryRepository) private var categoryRepository
     @Environment(\.loanRepository) private var loanRepository
     @Environment(\.chitFundRepository) private var chitFundRepository
     @State private var selectedTab: AppTab = .home
 
     var body: some View {
-        VStack(spacing:0){
-            ZStack {
-                HomeView(
-                    entitlements: StubEntitlementsProvider(),
-                    expenseRepository: expenseRepository,
-                    categoryRepository: categoryRepository,
-                    loanRepository: loanRepository,
-                    chitFundRepository: chitFundRepository,
-                    isActive: selectedTab == .home,
-                    onViewAllTransactions: { selectedTab = .expenses }
-                )
-                    .opacity(selectedTab == .home ? 1 : 0)
-                    .allowsHitTesting(selectedTab == .home)
-
-                ExpensesListView(
-                    repository: expenseRepository,
-                    isActive: selectedTab == .expenses
-                )
-                .opacity(selectedTab == .expenses ? 1 : 0)
-                .allowsHitTesting(selectedTab == .expenses)
-
-                EMIListView(
-                    repository: loanRepository,
-                    chitFundRepository: chitFundRepository,
-                    isActive: selectedTab == .emi
-                )
-                .opacity(selectedTab == .emi ? 1 : 0)
-                .allowsHitTesting(selectedTab == .emi)
+        TabView(selection: $selectedTab) {
+            HomeView(
+                entitlements: StubEntitlementsProvider(),
+                transactionRepository: transactionRepository,
+                categoryRepository: categoryRepository,
+                loanRepository: loanRepository,
+                chitFundRepository: chitFundRepository,
+                isActive: selectedTab == .home,
+                onViewAllTransactions: { selectedTab = .transactions }
+            )
+            .tabItem {
+                Label(AppTab.home.title, systemImage: AppTab.home.icon)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .tag(AppTab.home)
 
-            customTabBar
+            TransactionsListView(
+                repository: transactionRepository,
+                isActive: selectedTab == .transactions
+            )
+            .tabItem {
+                Label(AppTab.transactions.title, systemImage: AppTab.transactions.icon)
+            }
+            .tag(AppTab.transactions)
+
+            EMIListView(
+                repository: loanRepository,
+                chitFundRepository: chitFundRepository,
+                isActive: selectedTab == .emi
+            )
+            .tabItem {
+                Label(AppTab.emi.title, systemImage: AppTab.emi.icon)
+            }
+            .tag(AppTab.emi)
         }
+        .tint(themeColors.accent)
         .onAppear {
             NotificationService.rescheduleReminders(loans: loanRepository.fetchAll(), chitFunds: chitFundRepository.fetchAll())
         }
     }
-    
-    
-    private func tabButton(_ tab: AppTab) -> some View {
-        Button {
-            selectedTab = tab
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: tab.icon)
-                    .font(.system(size: 20))
-                Text(tab.title)
-                    .font(typography.caption2)
-            }
-            .foregroundStyle(selectedTab == tab ? themeColors.accent : .secondary)
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var customTabBar: some View {
-        HStack(spacing: 0) {
-            tabButton(.home)
-            tabButton(.expenses)
-            tabButton(.emi)
-        }
-        .padding(.top, 8)
-        .background(themeColors.surface)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.08))
-                .frame(height: 1)
-        }
-    }
-    
 }
 

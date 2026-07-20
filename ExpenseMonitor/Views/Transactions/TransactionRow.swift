@@ -1,5 +1,5 @@
 //
-//  ExpenseRow.swift
+//  TransactionRow.swift
 //  ExpenseMonitor
 //
 //  Created by Ospyn on 14/07/26.
@@ -7,38 +7,38 @@
 
 import SwiftUI
 
-struct ExpenseRow: View {
+struct TransactionRow: View {
 
-    let expense: Expense
+    let transaction: Transaction
     var onTap: (() -> Void)? = nil
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
     private var amountColor: Color {
-        expense.type == .income ? themeColors.income : themeColors.expense
+        transaction.type == .income ? themeColors.income : themeColors.expense
     }
 
     private var amountPrefix: String {
-        expense.type == .income ? "+" : "-"
+        transaction.type == .income ? "+" : "-"
     }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            Image(systemName: expense.categoryIcon)
+            Image(systemName: transaction.categoryIcon)
                 .foregroundStyle(themeColors.accent)
                 .frame(width: 40, height: 40)
                 .background(themeColors.accent.opacity(0.15))
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(expense.title)
+                Text(transaction.title)
                     .font(typography.subheadline)
 
                 HStack(spacing: 4) {
-                    Text(expense.category)
+                    Text(transaction.category)
                     Text("•")
-                    Text(expense.expenseDate.formatted(date: .omitted, time: .shortened))
+                    Text(transaction.date.formatted(date: .omitted, time: .shortened))
                 }
                 .font(typography.caption)
                 .foregroundStyle(.secondary)
@@ -46,7 +46,7 @@ struct ExpenseRow: View {
 
             Spacer()
 
-            Text("\(amountPrefix)\(expense.amount.currencyFormatted)")
+            Text("\(amountPrefix)\(transaction.amount.currencyFormatted)")
                 .font(typography.amount(size: 15))
                 .foregroundStyle(amountColor)
         }
@@ -58,13 +58,13 @@ struct ExpenseRow: View {
 }
 
 #Preview {
-    ExpenseRow(expense: Expense(
+    TransactionRow(transaction: Transaction(
         id: "preview",
         title: "Groceries",
         amount: 450,
         category: "Food",
         type: .expense,
-        expenseDate: Date(),
+        date: Date(),
         categoryIcon: "fork.knife"
     ))
 }

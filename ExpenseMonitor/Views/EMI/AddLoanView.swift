@@ -22,6 +22,7 @@ struct AddLoanView: View {
     @State private var startDate = Date()
     @State private var numberOfInstallmentsText = ""
     @State private var isDatePickerPresented = false
+    @Namespace private var glassNamespace
 
     private var isValid: Bool {
         guard let principal = Double(principalAmountText), principal > 0 else { return false }
@@ -45,11 +46,12 @@ struct AddLoanView: View {
             }
             .padding()
 
-            Picker("", selection: $type) {
-                Text("Loan").tag(LoanType.loan)
-                Text("Credit Card").tag(LoanType.creditCard)
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    typeButton(.loan, label: "Loan")
+                    typeButton(.creditCard, label: "Credit Card")
+                }
             }
-            .pickerStyle(.segmented)
             .padding(.horizontal)
             .padding(.bottom, 12)
 
@@ -115,6 +117,31 @@ struct AddLoanView: View {
                 .padding()
                 .presentationDetents([.medium])
         }
+    }
+
+    private func typeButton(_ option: LoanType, label: String) -> some View {
+        let isSelected = type == option
+        return Button {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) {
+                type = option
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: option.icon)
+                Text(label)
+            }
+            .font(typography.subheadline(emphasized: isSelected))
+            .foregroundStyle(isSelected ? .white : .primary)
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(themeColors.accent).interactive() : .regular.interactive(),
+            in: Capsule()
+        )
+        .matchedGeometryEffect(id: isSelected ? "loanTypeIndicator" : "\(option.rawValue)-idle", in: glassNamespace)
     }
 
     private func formattedAmount(_ amount: Double) -> String {

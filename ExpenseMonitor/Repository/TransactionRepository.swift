@@ -1,5 +1,5 @@
 //
-//  ExpenseRepository.swift
+//  TransactionRepository.swift
 //  ExpenseMonitor
 //
 //  Created by Ospyn on 16/07/26.
@@ -10,11 +10,11 @@ import SwiftData
 
 
 
-protocol ExpenseRepository {
-    func fetchAll() -> [Expense]
-    func add(_ expense: Expense)
-    func update(_ expense: Expense)
-    func delete(_ expense: Expense)
+protocol TransactionRepository {
+    func fetchAll() -> [Transaction]
+    func add(_ transaction: Transaction)
+    func update(_ transaction: Transaction)
+    func delete(_ transaction: Transaction)
 }
 
 
@@ -26,7 +26,7 @@ protocol ExpenseRepository {
 
 
 
-class DefaultExpenseRepository: ExpenseRepository {
+class DefaultTransactionRepository: TransactionRepository {
     
     
     private let modelContext: ModelContext
@@ -38,38 +38,38 @@ class DefaultExpenseRepository: ExpenseRepository {
     }
     
     
-    func fetchAll() -> [Expense] {
-        let descriptor = FetchDescriptor<Expense>(
+    func fetchAll() -> [Transaction] {
+        let descriptor = FetchDescriptor<Transaction>(
             sortBy: [SortDescriptor(\.lastModified, order: .reverse)]
         )
         do {
             return try modelContext.fetch(descriptor)
         } catch {
-            print("Failed to fetch expenses: \(error)")
+            print("Failed to fetch transactions: \(error)")
             return []
         }
     }
     
     
     
-    func add(_ expense: Expense) {
-        modelContext.insert(expense)
+    func add(_ transaction: Transaction) {
+        modelContext.insert(transaction)
         try? modelContext.save()
         syncIfNeeded()
-        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
+        NotificationCenter.default.post(name: .transactionsDidChange, object: nil)
     }
 
-    func update(_ expense: Expense) {
+    func update(_ transaction: Transaction) {
         try? modelContext.save()
         syncIfNeeded()
-        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
+        NotificationCenter.default.post(name: .transactionsDidChange, object: nil)
     }
 
-    func delete(_ expense: Expense) {
-        modelContext.delete(expense)
+    func delete(_ transaction: Transaction) {
+        modelContext.delete(transaction)
         try? modelContext.save()
         syncIfNeeded()
-        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
+        NotificationCenter.default.post(name: .transactionsDidChange, object: nil)
     }
     
     

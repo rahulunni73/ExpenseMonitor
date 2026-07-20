@@ -7,7 +7,7 @@ import SwiftUI
 import SwiftData
 
 struct ReportsView: View {
-    let expenseRepository: ExpenseRepository
+    let transactionRepository: TransactionRepository
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
@@ -20,13 +20,13 @@ struct ReportsView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
-        self.expenseRepository = expenseRepository
+    init(transactionRepository: TransactionRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
+        self.transactionRepository = transactionRepository
         self.categoryRepository = categoryRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
         _viewModel = State(initialValue: ReportsViewModel(
-            expenseRepository: expenseRepository,
+            transactionRepository: transactionRepository,
             loanRepository: loanRepository,
             chitFundRepository: chitFundRepository
         ))
@@ -74,14 +74,14 @@ struct ReportsView: View {
                         SpendingTrendCard(points: viewModel.spendingPoints) { point in
                             drillDown = TransactionDrillDown(
                                 title: point.day,
-                                expenses: viewModel.expenses(onDate: point.date)
+                                transactions: viewModel.transactions(onDate: point.date)
                             )
                         }
 
                         ExpenseBreakdownCard(data: viewModel.breakdownData) { category in
                             drillDown = TransactionDrillDown(
                                 title: category,
-                                expenses: viewModel.expenses(inCategory: category)
+                                transactions: viewModel.transactions(inCategory: category)
                             )
                         }
                     }
@@ -102,7 +102,7 @@ struct ReportsView: View {
         .sheet(item: $drillDown) { drillDown in
             TransactionListSheet(
                 title: drillDown.title,
-                expenses: drillDown.expenses,
+                transactions: drillDown.transactions,
                 onChange: { viewModel.loadData() }
             )
         }
@@ -154,9 +154,9 @@ struct ReportsView: View {
             Image(systemName: "chart.bar.xaxis")
                 .font(.system(size: 30))
                 .foregroundStyle(.secondary)
-            Text("No expenses for this period")
+            Text("No transactions for this period")
                 .font(typography.headline)
-            Text("Spending trend and category breakdown will show up here once you add expenses in this period.")
+            Text("Spending trend and category breakdown will show up here once you add transactions in this period.")
                 .font(typography.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -195,16 +195,16 @@ struct ReportsView: View {
 private struct TransactionDrillDown: Identifiable {
     let id = UUID()
     let title: String
-    let expenses: [Expense]
+    let transactions: [Transaction]
 }
 
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self, Category.self, Loan.self, ChitFund.self,
+        for: Transaction.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     ReportsView(
-        expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
+        transactionRepository: DefaultTransactionRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
         categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
         loanRepository: DefaultLoanRepository(modelContext: container.mainContext),
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext)

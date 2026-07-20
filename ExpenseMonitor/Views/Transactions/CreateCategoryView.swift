@@ -13,7 +13,7 @@ struct CreateCategoryView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
     @Environment(\.categoryRepository) private var categoryRepository
-    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.transactionRepository) private var transactionRepository
 
     @State private var name: String
     @State private var selectedIcon: String
@@ -144,10 +144,10 @@ struct CreateCategoryView: View {
             existingCategory.type = type
             categoryRepository.update(existingCategory)
 
-            for expense in expenseRepository.fetchAll() where expense.category == oldName {
-                expense.category = name
-                expense.categoryIcon = selectedIcon
-                expenseRepository.update(expense)
+            for transaction in transactionRepository.fetchAll() where transaction.category == oldName {
+                transaction.category = name
+                transaction.categoryIcon = selectedIcon
+                transactionRepository.update(transaction)
             }
             onCreate?(existingCategory)
         } else {
@@ -168,7 +168,7 @@ struct CreateCategoryView: View {
 #Preview {
     CreateCategoryView()
         .environment(\.categoryRepository, PreviewCategoryRepository())
-        .environment(\.expenseRepository, PreviewExpenseRepository())
+        .environment(\.transactionRepository, PreviewTransactionRepository())
 }
 
 private class PreviewCategoryRepository: CategoryRepository {
@@ -178,9 +178,9 @@ private class PreviewCategoryRepository: CategoryRepository {
     func delete(_ category: Category) {}
 }
 
-private class PreviewExpenseRepository: ExpenseRepository {
-    func fetchAll() -> [Expense] { [] }
-    func add(_ expense: Expense) {}
-    func update(_ expense: Expense) {}
-    func delete(_ expense: Expense) {}
+private class PreviewTransactionRepository: TransactionRepository {
+    func fetchAll() -> [Transaction] { [] }
+    func add(_ transaction: Transaction) {}
+    func update(_ transaction: Transaction) {}
+    func delete(_ transaction: Transaction) {}
 }

@@ -11,7 +11,7 @@ struct ManageCategoriesView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
     @Environment(\.categoryRepository) private var categoryRepository
-    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.transactionRepository) private var transactionRepository
 
     @State private var categories: [Category] = []
     @State private var selectedType: CategoryType = .expense
@@ -84,7 +84,7 @@ struct ManageCategoriesView: View {
                 reload()
             }
         } message: { category in
-            Text("Expenses already using \"\(category.name)\" will keep their existing name and icon, but you won't be able to pick it for new ones.")
+            Text("Transactions already using \"\(category.name)\" will keep their existing name and icon, but you won't be able to pick it for new ones.")
         }
     }
 
@@ -133,10 +133,10 @@ struct ManageCategoriesView: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self, Category.self, Loan.self, ChitFund.self,
+        for: Transaction.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     ManageCategoriesView()
         .environment(\.categoryRepository, DefaultCategoryRepository(modelContext: container.mainContext))
-        .environment(\.expenseRepository, DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
+        .environment(\.transactionRepository, DefaultTransactionRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
 }

@@ -11,7 +11,7 @@ import SwiftData
 struct HomeView : View {
 
     let entitlements: EntitlementsProviding
-    let expenseRepository: ExpenseRepository
+    let transactionRepository: TransactionRepository
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
@@ -25,16 +25,16 @@ struct HomeView : View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(entitlements: EntitlementsProviding, expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool, onViewAllTransactions: (() -> Void)? = nil) {
+    init(entitlements: EntitlementsProviding, transactionRepository: TransactionRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool, onViewAllTransactions: (() -> Void)? = nil) {
         self.entitlements = entitlements
-        self.expenseRepository = expenseRepository
+        self.transactionRepository = transactionRepository
         self.categoryRepository = categoryRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
         self.isActive = isActive
         self.onViewAllTransactions = onViewAllTransactions
         _viewModel = State(initialValue: HomeViewModel(
-            expenseRepository: expenseRepository,
+            transactionRepository: transactionRepository,
             loanRepository: loanRepository,
             chitFundRepository: chitFundRepository
         ))
@@ -89,7 +89,9 @@ struct HomeView : View {
                         )
                     }
 
-                    RecentTransactionsCard(transactions: viewModel.recentTransactions, onViewAll: onViewAllTransactions)
+                    if !viewModel.recentTransactions.isEmpty {
+                        RecentTransactionsCard(transactions: viewModel.recentTransactions, onViewAll: onViewAllTransactions)
+                    }
                 }
 
             }
@@ -105,7 +107,7 @@ struct HomeView : View {
                 viewModel.loadData()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .expensesDidChange)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .transactionsDidChange)) { _ in
             viewModel.loadData()
         }
         .fullScreenCover(isPresented: $isSettingsPresented) {
@@ -113,7 +115,7 @@ struct HomeView : View {
         }
         .fullScreenCover(isPresented: $isReportsPresented) {
             ReportsView(
-                expenseRepository: expenseRepository,
+                transactionRepository: transactionRepository,
                 categoryRepository: categoryRepository,
                 loanRepository: loanRepository,
                 chitFundRepository: chitFundRepository
@@ -127,12 +129,12 @@ struct HomeView : View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self, Category.self, Loan.self, ChitFund.self,
+        for: Transaction.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     HomeView(
         entitlements: StubEntitlementsProvider(),
-        expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
+        transactionRepository: DefaultTransactionRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
         categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
         loanRepository: DefaultLoanRepository(modelContext: container.mainContext),
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext),

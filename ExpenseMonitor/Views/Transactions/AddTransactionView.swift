@@ -1,18 +1,18 @@
 //
-//  AddExpenseView.swift
+//  AddTransactionView.swift
 //  ExpenseMonitor
 //
 
 import SwiftUI
 
-struct AddExpenseView: View {
-    var existingExpense: Expense? = nil
+struct AddTransactionView: View {
+    var existingTransaction: Transaction? = nil
     var onSave: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
-    @Environment(\.expenseRepository) private var repository
+    @Environment(\.transactionRepository) private var repository
     @Environment(\.categoryRepository) private var categoryRepository
 
     @State private var title = ""
@@ -53,7 +53,7 @@ struct AddExpenseView: View {
                     dismiss()
                 }
                 Spacer()
-                Text(existingExpense == nil ? "Add" : "Edit")
+                Text(existingTransaction == nil ? "Add" : "Edit")
                     .font(typography.headline)
                 Spacer()
                 Image(systemName: "dollarsign.arrow.circlepath")
@@ -80,7 +80,7 @@ struct AddExpenseView: View {
             }
 
             if selectedCategory != nil {
-                expenseFormPanel
+                transactionFormPanel
                     .padding(.horizontal)
                     .padding(.bottom, 12)
             }
@@ -88,12 +88,12 @@ struct AddExpenseView: View {
         .background(themeColors.background)
         .onAppear {
             categories = categoryRepository.fetchAll()
-            if let existingExpense {
-                title = existingExpense.title
-                amountText = formattedAmount(existingExpense.amount)
-                selectedType = existingExpense.type
-                date = existingExpense.expenseDate
-                selectedCategory = categories.first { $0.name == existingExpense.category }
+            if let existingTransaction {
+                title = existingTransaction.title
+                amountText = formattedAmount(existingTransaction.amount)
+                selectedType = existingTransaction.type
+                date = existingTransaction.date
+                selectedCategory = categories.first { $0.name == existingTransaction.category }
             }
         }
         .onChange(of: selectedType) { _, _ in
@@ -115,7 +115,7 @@ struct AddExpenseView: View {
         }
     }
 
-    private var expenseFormPanel: some View {
+    private var transactionFormPanel: some View {
         VStack(spacing: 12) {
             HStack {
                 Spacer()
@@ -271,27 +271,27 @@ struct AddExpenseView: View {
     private func save() {
         guard let amount = Double(amountText), let selectedCategory else { return }
 
-        if let existingExpense {
-            existingExpense.title = title
-            existingExpense.amount = amount
-            existingExpense.category = selectedCategory.name
-            existingExpense.type = selectedCategory.type
-            existingExpense.expenseDate = date
-            existingExpense.categoryIcon = selectedCategory.icon
-            existingExpense.lastModified = Date()
-            repository.update(existingExpense)
+        if let existingTransaction {
+            existingTransaction.title = title
+            existingTransaction.amount = amount
+            existingTransaction.category = selectedCategory.name
+            existingTransaction.type = selectedCategory.type
+            existingTransaction.date = date
+            existingTransaction.categoryIcon = selectedCategory.icon
+            existingTransaction.lastModified = Date()
+            repository.update(existingTransaction)
         } else {
-            let newExpense = Expense(
+            let newTransaction = Transaction(
                 id: UUID().uuidString,
                 title: title,
                 amount: amount,
                 category: selectedCategory.name,
                 type: selectedCategory.type,
-                expenseDate: date,
+                date: date,
                 note: nil,
                 categoryIcon: selectedCategory.icon
             )
-            repository.add(newExpense)
+            repository.add(newTransaction)
         }
 
         onSave?()
@@ -300,16 +300,16 @@ struct AddExpenseView: View {
 }
 
 #Preview {
-    AddExpenseView()
-        .environment(\.expenseRepository, PreviewExpenseRepository())
+    AddTransactionView()
+        .environment(\.transactionRepository, PreviewTransactionRepository())
         .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
-private class PreviewExpenseRepository: ExpenseRepository {
-    func fetchAll() -> [Expense] { [] }
-    func add(_ expense: Expense) {}
-    func update(_ expense: Expense) {}
-    func delete(_ expense: Expense) {}
+private class PreviewTransactionRepository: TransactionRepository {
+    func fetchAll() -> [Transaction] { [] }
+    func add(_ transaction: Transaction) {}
+    func update(_ transaction: Transaction) {}
+    func delete(_ transaction: Transaction) {}
 }
 
 private class PreviewCategoryRepository: CategoryRepository {

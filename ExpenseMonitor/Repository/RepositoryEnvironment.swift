@@ -20,11 +20,11 @@ import SwiftUI
 /// value is ever set — not on some later "injection missed" case as intended. (`themeColors`/
 /// `typography` never hit this because their defaults already return real, harmless values.)
 
-private struct EmptyExpenseRepository: ExpenseRepository {
-    func fetchAll() -> [Expense] { [] }
-    func add(_ expense: Expense) {}
-    func update(_ expense: Expense) {}
-    func delete(_ expense: Expense) {}
+private struct EmptyTransactionRepository: TransactionRepository {
+    func fetchAll() -> [Transaction] { [] }
+    func add(_ transaction: Transaction) {}
+    func update(_ transaction: Transaction) {}
+    func delete(_ transaction: Transaction) {}
 }
 
 private struct EmptyCategoryRepository: CategoryRepository {
@@ -48,8 +48,8 @@ private struct EmptyChitFundRepository: ChitFundRepository {
     func delete(_ chitFund: ChitFund) {}
 }
 
-private struct ExpenseRepositoryKey: EnvironmentKey {
-    static let defaultValue: ExpenseRepository = EmptyExpenseRepository()
+private struct TransactionRepositoryKey: EnvironmentKey {
+    static let defaultValue: TransactionRepository = EmptyTransactionRepository()
 }
 
 private struct CategoryRepositoryKey: EnvironmentKey {
@@ -65,9 +65,9 @@ private struct ChitFundRepositoryKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    var expenseRepository: ExpenseRepository {
-        get { self[ExpenseRepositoryKey.self] }
-        set { self[ExpenseRepositoryKey.self] = newValue }
+    var transactionRepository: TransactionRepository {
+        get { self[TransactionRepositoryKey.self] }
+        set { self[TransactionRepositoryKey.self] = newValue }
     }
 
     var categoryRepository: CategoryRepository {

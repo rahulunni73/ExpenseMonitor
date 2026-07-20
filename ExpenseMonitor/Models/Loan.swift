@@ -9,6 +9,13 @@ import Foundation
 enum LoanType: String, Codable {
     case loan = "LOAN"
     case creditCard = "CREDIT_CARD"
+
+    var icon: String {
+        switch self {
+        case .loan: return "banknote.fill"
+        case .creditCard: return "creditcard.fill"
+        }
+    }
 }
 
 @Model

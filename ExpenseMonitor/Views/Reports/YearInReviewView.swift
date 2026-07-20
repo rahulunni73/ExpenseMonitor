@@ -59,7 +59,7 @@ struct YearInReviewView: View {
                         statCard(
                             icon: "flame.fill",
                             iconColor: themeColors.expense,
-                            title: "Biggest Single Expense",
+                            title: "Biggest Single Transaction",
                             value: biggestExpense.title,
                             detail: biggestExpense.amount.currencyFormatted
                         )
@@ -148,7 +148,7 @@ struct YearInReviewView: View {
             transactionCount: 214,
             topCategory: CategoryBreakdown(category: "Food & Dining", percent: 28, color: .orange),
             busiestMonth: ("December", 58200),
-            biggestExpense: Expense(id: "preview", title: "Flight Booking", amount: 24500, category: "Shopping & Personal Care"),
+            biggestExpense: Transaction(id: "preview", title: "Flight Booking", amount: 24500, category: "Shopping & Personal Care"),
             totalEMIChitPaid: 96000
         )
     )

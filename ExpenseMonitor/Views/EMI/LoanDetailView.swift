@@ -14,7 +14,7 @@ struct LoanDetailView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
     @Environment(\.loanRepository) private var repository
-    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.transactionRepository) private var transactionRepository
 
     @State private var isDeleteConfirmationPresented = false
     @State private var pendingLatePayment: PendingPayment?
@@ -268,7 +268,7 @@ struct LoanDetailView: View {
         } else {
             loan.paidInstallments.append(next.id)
             repository.update(loan)
-            logExpense(installmentNumber: next.id, penalty: 0)
+            logTransaction(installmentNumber: next.id, penalty: 0)
             onChange?()
         }
     }
@@ -279,29 +279,29 @@ struct LoanDetailView: View {
             loan.penalties.append(InstallmentPenalty(installmentNumber: number, amount: penalty))
         }
         repository.update(loan)
-        logExpense(installmentNumber: number, penalty: penalty, expenseDate: paidDate)
+        logTransaction(installmentNumber: number, penalty: penalty, date: paidDate)
         onChange?()
     }
 
-    private func logExpense(installmentNumber: Int, penalty: Double, expenseDate: Date = Date()) {
-        let expense = Expense(
+    private func logTransaction(installmentNumber: Int, penalty: Double, date: Date = Date()) {
+        let transaction = Transaction(
             id: UUID().uuidString,
             title: "\(loan.name) — EMI Payment",
             amount: loan.installmentAmount + penalty,
             category: "Financial & Legal",
             type: .expense,
-            expenseDate: expenseDate,
+            date: date,
             note: penalty > 0 ? "Installment #\(installmentNumber) (includes \(penalty.currencyFormatted) late penalty)" : "Installment #\(installmentNumber)",
             categoryIcon: "creditcard.fill",
             linkedLoanID: loan.id,
             linkedInstallmentNumber: installmentNumber
         )
-        expenseRepository.add(expense)
+        transactionRepository.add(transaction)
     }
 
-    private func removeLinkedExpense(installmentNumber: Int) {
-        if let expense = expenseRepository.fetchAll().first(where: { $0.linkedLoanID == loan.id && $0.linkedInstallmentNumber == installmentNumber }) {
-            expenseRepository.delete(expense)
+    private func removeLinkedTransaction(installmentNumber: Int) {
+        if let transaction = transactionRepository.fetchAll().first(where: { $0.linkedLoanID == loan.id && $0.linkedInstallmentNumber == installmentNumber }) {
+            transactionRepository.delete(transaction)
         }
     }
 
@@ -310,7 +310,7 @@ struct LoanDetailView: View {
         loan.paidInstallments.removeAll { $0 == last }
         loan.penalties.removeAll { $0.installmentNumber == last }
         repository.update(loan)
-        removeLinkedExpense(installmentNumber: last)
+        removeLinkedTransaction(installmentNumber: last)
         onChange?()
     }
 }
@@ -331,6 +331,7 @@ private struct ConfirmPaymentSheet: View {
 
     @State private var paidDate: Date
     @State private var penaltyText: String = ""
+    @FocusState private var isPenaltyFieldFocused: Bool
 
     init(dueDate: Date, onConfirm: @escaping (Date, Double) -> Void) {
         self.dueDate = dueDate
@@ -357,30 +358,32 @@ private struct ConfirmPaymentSheet: View {
             }
             .padding()
 
-            VStack(alignment: .leading, spacing: 16) {
-                Text("This installment was due on \(dueDate.formatted(date: .abbreviated, time: .omitted)). When did you actually pay it?")
-                    .font(typography.subheadline)
-                    .foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("This installment was due on \(dueDate.formatted(date: .abbreviated, time: .omitted)). When did you actually pay it?")
+                        .font(typography.subheadline)
+                        .foregroundStyle(.secondary)
 
-                DatePicker("Paid on", selection: $paidDate, in: ...Date(), displayedComponents: .date)
-                    .datePickerStyle(.graphical)
+                    DatePicker("Paid on", selection: $paidDate, in: ...Date(), displayedComponents: .date)
+                        .datePickerStyle(.graphical)
 
-                if isLate {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Penalty Amount (optional)")
-                            .font(typography.caption)
-                            .foregroundStyle(.secondary)
-                        TextField("0", text: $penaltyText)
-                            .keyboardType(.decimalPad)
-                            .padding(12)
-                            .background(themeColors.surfaceSecondary)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                    if isLate {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Penalty Amount (optional)")
+                                .font(typography.caption)
+                                .foregroundStyle(.secondary)
+                            TextField("0", text: $penaltyText)
+                                .keyboardType(.decimalPad)
+                                .focused($isPenaltyFieldFocused)
+                                .padding(12)
+                                .background(themeColors.surfaceSecondary)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
                     }
                 }
+                .padding()
             }
-            .padding()
-
-            Spacer()
+            .scrollDismissesKeyboard(.interactively)
 
             Button {
                 onConfirm(paidDate, Double(penaltyText) ?? 0)
@@ -398,6 +401,14 @@ private struct ConfirmPaymentSheet: View {
         }
         .background(themeColors.background)
         .presentationDetents([.large])
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isPenaltyFieldFocused = false
+                }
+            }
+        }
     }
 }
 
@@ -406,7 +417,7 @@ private struct ConfirmPaymentSheet: View {
         loan: Loan(id: "preview", name: "Home Loan", principalAmount: 250000, installmentAmount: 12500, startDate: Date(), numberOfInstallments: 24)
     )
     .environment(\.loanRepository, PreviewLoanRepository())
-    .environment(\.expenseRepository, PreviewExpenseRepository())
+    .environment(\.transactionRepository, PreviewTransactionRepository())
 }
 
 private class PreviewLoanRepository: LoanRepository {
@@ -416,9 +427,9 @@ private class PreviewLoanRepository: LoanRepository {
     func delete(_ loan: Loan) {}
 }
 
-private class PreviewExpenseRepository: ExpenseRepository {
-    func fetchAll() -> [Expense] { [] }
-    func add(_ expense: Expense) {}
-    func update(_ expense: Expense) {}
-    func delete(_ expense: Expense) {}
+private class PreviewTransactionRepository: TransactionRepository {
+    func fetchAll() -> [Transaction] { [] }
+    func add(_ transaction: Transaction) {}
+    func update(_ transaction: Transaction) {}
+    func delete(_ transaction: Transaction) {}
 }

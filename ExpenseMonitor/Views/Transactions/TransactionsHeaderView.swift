@@ -1,21 +1,21 @@
 //
-//  ExpensesHeaderView.swift
+//  TransactionsHeaderView.swift
 //  ExpenseMonitor
 //
 
 import SwiftUI
 
-struct ExpensesHeaderView: View {
+struct TransactionsHeaderView: View {
     @Binding var selectedMonth: Date
     @Binding var selectedDay: Date?
     @Binding var searchText: String
     @Binding var typeFilter: CategoryType?
     @Binding var categoryFilters: Set<String>
-    let expenses: [Expense]
+    let transactions: [Transaction]
     let totalExpense: Double
     let totalIncome: Double
     let balance: Double
-    var onAddExpense: (() -> Void)? = nil
+    var onAddTransaction: (() -> Void)? = nil
 
     private enum FullScreenDestination: Identifiable {
         case calendar
@@ -33,7 +33,7 @@ struct ExpensesHeaderView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Expenses")
+                Text("Transactions")
                     .font(typography.title2Bold)
                 Spacer()
                 Button {
@@ -53,7 +53,7 @@ struct ExpensesHeaderView: View {
                         .frame(width: 44, height: 44)
                 }
                 Button {
-                    onAddExpense?()
+                    onAddTransaction?()
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 20))
@@ -88,7 +88,7 @@ struct ExpensesHeaderView: View {
 
                 Spacer()
 
-                statColumn(title: "Expenses", amount: totalExpense, color: themeColors.expense)
+                statColumn(title: "Expense", amount: totalExpense, color: themeColors.expense)
                 Spacer()
                 statColumn(title: "Income", amount: totalIncome, color: themeColors.income)
                 Spacer()
@@ -103,7 +103,7 @@ struct ExpensesHeaderView: View {
         .fullScreenCover(item: $fullScreenDestination) { destination in
             switch destination {
             case .calendar:
-                CalendarDayPickerView(selectedMonth: $selectedMonth, selectedDay: $selectedDay, expenses: expenses)
+                CalendarDayPickerView(selectedMonth: $selectedMonth, selectedDay: $selectedDay, transactions: transactions)
             case .searchFilter:
                 SearchFilterView(
                     searchText: $searchText,
@@ -129,13 +129,13 @@ struct ExpensesHeaderView: View {
 }
 
 #Preview {
-    ExpensesHeaderView(
+    TransactionsHeaderView(
         selectedMonth: .constant(Date()),
         selectedDay: .constant(nil),
         searchText: .constant(""),
         typeFilter: .constant(nil),
         categoryFilters: .constant([]),
-        expenses: [],
+        transactions: [],
         totalExpense: 4200,
         totalIncome: 50000,
         balance: 45800

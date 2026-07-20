@@ -8,7 +8,7 @@ import UniformTypeIdentifiers
 import SwiftUI
 
 struct BackupService {
-    let expenseRepository: ExpenseRepository
+    let transactionRepository: TransactionRepository
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
@@ -17,7 +17,7 @@ struct BackupService {
         BackupData(
             schemaVersion: 1,
             exportedAt: Date(),
-            expenses: expenseRepository.fetchAll().map(ExpenseDTO.init),
+            transactions: transactionRepository.fetchAll().map(TransactionDTO.init),
             categories: categoryRepository.fetchAll().map(CategoryDTO.init),
             loans: loanRepository.fetchAll().map(LoanDTO.init),
             chitFunds: chitFundRepository.fetchAll().map(ChitFundDTO.init)
@@ -25,7 +25,7 @@ struct BackupService {
     }
 
     func importData(_ backup: BackupData) {
-        expenseRepository.fetchAll().forEach { expenseRepository.delete($0) }
+        transactionRepository.fetchAll().forEach { transactionRepository.delete($0) }
         categoryRepository.fetchAll().forEach { categoryRepository.delete($0) }
         loanRepository.fetchAll().forEach { loanRepository.delete($0) }
         chitFundRepository.fetchAll().forEach { chitFundRepository.delete($0) }
@@ -33,7 +33,7 @@ struct BackupService {
         backup.categories.forEach { categoryRepository.add($0.makeModel()) }
         backup.loans.forEach { loanRepository.add($0.makeModel()) }
         backup.chitFunds.forEach { chitFundRepository.add($0.makeModel()) }
-        backup.expenses.forEach { expenseRepository.add($0.makeModel()) }
+        backup.transactions.forEach { transactionRepository.add($0.makeModel()) }
     }
 }
 

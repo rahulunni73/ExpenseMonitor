@@ -8,47 +8,47 @@ import Foundation
 struct BackupData: Codable {
     var schemaVersion: Int
     var exportedAt: Date
-    var expenses: [ExpenseDTO]
+    var transactions: [TransactionDTO]
     var categories: [CategoryDTO]
     var loans: [LoanDTO]
     var chitFunds: [ChitFundDTO]
 }
 
-struct ExpenseDTO: Codable {
+struct TransactionDTO: Codable {
     var id: String
     var title: String
     var amount: Double
     var category: String
     var type: CategoryType
-    var expenseDate: Date
+    var date: Date
     var note: String?
     var categoryIcon: String
     var linkedLoanID: String?
     var linkedChitFundID: String?
     var linkedInstallmentNumber: Int?
 
-    init(from expense: Expense) {
-        id = expense.id
-        title = expense.title
-        amount = expense.amount
-        category = expense.category
-        type = expense.type
-        expenseDate = expense.expenseDate
-        note = expense.note
-        categoryIcon = expense.categoryIcon
-        linkedLoanID = expense.linkedLoanID
-        linkedChitFundID = expense.linkedChitFundID
-        linkedInstallmentNumber = expense.linkedInstallmentNumber
+    init(from transaction: Transaction) {
+        id = transaction.id
+        title = transaction.title
+        amount = transaction.amount
+        category = transaction.category
+        type = transaction.type
+        date = transaction.date
+        note = transaction.note
+        categoryIcon = transaction.categoryIcon
+        linkedLoanID = transaction.linkedLoanID
+        linkedChitFundID = transaction.linkedChitFundID
+        linkedInstallmentNumber = transaction.linkedInstallmentNumber
     }
 
-    func makeModel() -> Expense {
-        Expense(
+    func makeModel() -> Transaction {
+        Transaction(
             id: id,
             title: title,
             amount: amount,
             category: category,
             type: type,
-            expenseDate: expenseDate,
+            date: date,
             note: note,
             categoryIcon: categoryIcon,
             linkedLoanID: linkedLoanID,

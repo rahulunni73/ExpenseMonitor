@@ -1,5 +1,5 @@
 //
-//  Expense+Aggregation.swift
+//  Transaction+Aggregation.swift
 //  ExpenseMonitor
 //
 
@@ -10,19 +10,19 @@ private let categoryBreakdownPalette: [Color] = [
     .systemTeal, .systemPink, .systemYellow, .systemIndigo
 ].map(Color.init)
 
-func expenseSpendingPoints(from expenses: [Expense]) -> [SpendingPoint] {
+func expenseSpendingPoints(from transactions: [Transaction]) -> [SpendingPoint] {
     let calendar = Calendar.current
-    let grouped = Dictionary(grouping: expenses) { calendar.startOfDay(for: $0.expenseDate) }
+    let grouped = Dictionary(grouping: transactions) { calendar.startOfDay(for: $0.date) }
     return grouped.keys.sorted().map { day in
         let total = (grouped[day] ?? []).reduce(0) { $0 + $1.amount }
         return SpendingPoint(day: day.formatted(.dateTime.day().month(.abbreviated)), amount: total, date: day)
     }
 }
 
-func expenseCategoryBreakdown(from expenses: [Expense]) -> [CategoryBreakdown] {
-    let total = expenses.reduce(0) { $0 + $1.amount }
+func expenseCategoryBreakdown(from transactions: [Transaction]) -> [CategoryBreakdown] {
+    let total = transactions.reduce(0) { $0 + $1.amount }
     guard total > 0 else { return [] }
-    let grouped = Dictionary(grouping: expenses) { $0.category }
+    let grouped = Dictionary(grouping: transactions) { $0.category }
     return grouped.keys.sorted().enumerated().map { index, category in
         let categoryTotal = (grouped[category] ?? []).reduce(0) { $0 + $1.amount }
         let percent = (categoryTotal / total) * 100

@@ -17,7 +17,7 @@ struct ExpenseBreakdownCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Expense Breakdown")
+            Text("Transaction Breakdown")
                 .font(typography.headline)
 
             HStack(spacing: 24) {

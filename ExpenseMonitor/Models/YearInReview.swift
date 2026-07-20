@@ -15,6 +15,6 @@ struct YearInReview: Identifiable {
     let transactionCount: Int
     let topCategory: CategoryBreakdown?
     let busiestMonth: (label: String, amount: Double)?
-    let biggestExpense: Expense?
+    let biggestExpense: Transaction?
     let totalEMIChitPaid: Double
 }

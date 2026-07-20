@@ -50,7 +50,7 @@ class DefaultCategoryRepository: CategoryRepository {
         guard fetchAll().isEmpty else { return }
 
         let defaults: [Category] = [
-            // Expense categories
+            // Transaction categories
             Category(id: "cat-housing", name: "Housing & Utilities", icon: "house.fill", type: .expense, isSystemDefined: true),
             Category(id: "cat-food", name: "Food & Dining", icon: "fork.knife", type: .expense, isSystemDefined: true),
             Category(id: "cat-transport", name: "Transportation", icon: "car.fill", type: .expense, isSystemDefined: true),

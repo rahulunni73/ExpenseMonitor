@@ -14,7 +14,7 @@ struct SettingsView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
     @Environment(ThemeManager.self) private var themeManager
-    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.transactionRepository) private var transactionRepository
     @Environment(\.categoryRepository) private var categoryRepository
     @Environment(\.loanRepository) private var loanRepository
     @Environment(\.chitFundRepository) private var chitFundRepository
@@ -38,7 +38,7 @@ struct SettingsView: View {
 
     private var backupService: BackupService {
         BackupService(
-            expenseRepository: expenseRepository,
+            transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             loanRepository: loanRepository,
             chitFundRepository: chitFundRepository
@@ -152,7 +152,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Data")
                 } footer: {
-                    Text("Export a complete backup of your expenses, categories, EMIs, and chit funds, or restore from a previously saved backup file.")
+                    Text("Export a complete backup of your transactions, categories, EMIs, and chit funds, or restore from a previously saved backup file.")
                 }
 
                 Section("Premium") {
@@ -213,7 +213,7 @@ struct SettingsView: View {
                 pendingImportURL = nil
             }
         } message: {
-            Text("This will permanently replace all your expenses, categories, EMIs, and chit funds with the contents of this backup. This can't be undone.")
+            Text("This will permanently replace all your transactions, categories, EMIs, and chit funds with the contents of this backup. This can't be undone.")
         }
         .alert("Restore Complete", isPresented: $isRestoreCompleteAlertPresented) {
             Button("OK") { dismiss() }
@@ -301,12 +301,12 @@ struct SettingsView: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self, Category.self, Loan.self, ChitFund.self,
+        for: Transaction.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     SettingsView(entitlements: StubEntitlementsProvider())
         .environment(ThemeManager())
-        .environment(\.expenseRepository, DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
+        .environment(\.transactionRepository, DefaultTransactionRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
         .environment(\.categoryRepository, DefaultCategoryRepository(modelContext: container.mainContext))
         .environment(\.loanRepository, DefaultLoanRepository(modelContext: container.mainContext))
         .environment(\.chitFundRepository, DefaultChitFundRepository(modelContext: container.mainContext))

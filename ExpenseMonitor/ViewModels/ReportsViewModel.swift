@@ -24,11 +24,11 @@ enum ReportGranularity: String, CaseIterable {
 
 @Observable
 class ReportsViewModel {
-    private let expenseRepository: ExpenseRepository
+    private let transactionRepository: TransactionRepository
     private let loanRepository: LoanRepository
     private let chitFundRepository: ChitFundRepository
 
-    private var expenses: [Expense] = []
+    private var transactions: [Transaction] = []
     private var loans: [Loan] = []
     private var chitFunds: [ChitFund] = []
 
@@ -36,15 +36,15 @@ class ReportsViewModel {
     var referenceDate: Date = Date()
     var customRange: DateInterval?
 
-    init(expenseRepository: ExpenseRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
-        self.expenseRepository = expenseRepository
+    init(transactionRepository: TransactionRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository) {
+        self.transactionRepository = transactionRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
         loadData()
     }
 
     func loadData() {
-        expenses = expenseRepository.fetchAll()
+        transactions = transactionRepository.fetchAll()
         loans = loanRepository.fetchAll()
         chitFunds = chitFundRepository.fetchAll()
     }
@@ -77,22 +77,22 @@ class ReportsViewModel {
             ?? DateInterval(start: previousReferenceDate, duration: 0)
     }
 
-    var filteredExpenses: [Expense] {
+    var filteredTransactions: [Transaction] {
         let interval = periodInterval
-        return expenses.filter { interval.contains($0.expenseDate) }
+        return transactions.filter { interval.contains($0.date) }
     }
 
-    private var previousPeriodExpenses: [Expense] {
+    private var previousPeriodTransactions: [Transaction] {
         let interval = previousPeriodInterval
-        return expenses.filter { interval.contains($0.expenseDate) }
+        return transactions.filter { interval.contains($0.date) }
     }
 
     var income: Double {
-        filteredExpenses.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+        filteredTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
     }
 
     var expense: Double {
-        filteredExpenses.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+        filteredTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
     }
 
     var netBalance: Double {
@@ -100,23 +100,23 @@ class ReportsViewModel {
     }
 
     var spendingPoints: [SpendingPoint] {
-        expenseSpendingPoints(from: filteredExpenses.filter { $0.type == .expense })
+        expenseSpendingPoints(from: filteredTransactions.filter { $0.type == .expense })
     }
 
     var breakdownData: [CategoryBreakdown] {
-        expenseCategoryBreakdown(from: filteredExpenses.filter { $0.type == .expense })
+        expenseCategoryBreakdown(from: filteredTransactions.filter { $0.type == .expense })
     }
 
-    func expenses(onDate date: Date) -> [Expense] {
-        filteredExpenses.filter { $0.type == .expense && Calendar.current.isDate($0.expenseDate, inSameDayAs: date) }
+    func transactions(onDate date: Date) -> [Transaction] {
+        filteredTransactions.filter { $0.type == .expense && Calendar.current.isDate($0.date, inSameDayAs: date) }
     }
 
-    func expenses(inCategory category: String) -> [Expense] {
-        filteredExpenses.filter { $0.type == .expense && $0.category == category }
+    func transactions(inCategory category: String) -> [Transaction] {
+        filteredTransactions.filter { $0.type == .expense && $0.category == category }
     }
 
     private var previousExpense: Double {
-        previousPeriodExpenses.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+        previousPeriodTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
     }
 
     var expenseDelta: Double? {
@@ -141,12 +141,12 @@ class ReportsViewModel {
 
     // MARK: EMI/Chit burden — always the real current calendar month, independent of the browsed period above.
 
-    private var currentMonthExpenses: [Expense] {
-        expenses.filter { Calendar.current.isDate($0.expenseDate, equalTo: Date(), toGranularity: .month) }
+    private var currentMonthTransactions: [Transaction] {
+        transactions.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .month) }
     }
 
     private var currentMonthIncome: Double {
-        currentMonthExpenses.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+        currentMonthTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
     }
 
     private var totalDueThisMonth: Double {
@@ -163,23 +163,23 @@ class ReportsViewModel {
 
     var yearInReview: YearInReview? {
         guard granularity == .year else { return nil }
-        let yearExpenses = filteredExpenses
-        guard !yearExpenses.isEmpty else { return nil }
+        let yearTransactions = filteredTransactions
+        guard !yearTransactions.isEmpty else { return nil }
 
         let calendar = Calendar.current
         let year = calendar.component(.year, from: referenceDate)
-        let expenseOnly = yearExpenses.filter { $0.type == .expense }
+        let expenseOnly = yearTransactions.filter { $0.type == .expense }
 
         let topCategory = expenseCategoryBreakdown(from: expenseOnly).first
 
-        let busiestMonth: (label: String, amount: Double)? = Dictionary(grouping: expenseOnly) { calendar.component(.month, from: $0.expenseDate) }
-            .map { month, expenses in (month, expenses.reduce(0) { $0 + $1.amount }) }
+        let busiestMonth: (label: String, amount: Double)? = Dictionary(grouping: expenseOnly) { calendar.component(.month, from: $0.date) }
+            .map { month, transactions in (month, transactions.reduce(0) { $0 + $1.amount }) }
             .max { $0.1 < $1.1 }
             .map { month, amount in (calendar.monthSymbols[month - 1], amount) }
 
         let biggestExpense = expenseOnly.max { $0.amount < $1.amount }
 
-        let totalEMIChitPaid = yearExpenses
+        let totalEMIChitPaid = yearTransactions
             .filter { $0.linkedLoanID != nil || $0.linkedChitFundID != nil }
             .reduce(0) { $0 + $1.amount }
 
@@ -188,7 +188,7 @@ class ReportsViewModel {
             income: income,
             expense: expense,
             netSavings: netBalance,
-            transactionCount: yearExpenses.count,
+            transactionCount: yearTransactions.count,
             topCategory: topCategory,
             busiestMonth: busiestMonth,
             biggestExpense: biggestExpense,
