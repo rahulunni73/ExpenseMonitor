@@ -16,6 +16,7 @@ struct HomeView : View {
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
     let isActive: Bool
+    var onViewAllTransactions: (() -> Void)? = nil
 
     @State private var viewModel: HomeViewModel
     @State private var isSettingsPresented = false
@@ -24,13 +25,14 @@ struct HomeView : View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(entitlements: EntitlementsProviding, expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool) {
+    init(entitlements: EntitlementsProviding, expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, loanRepository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool, onViewAllTransactions: (() -> Void)? = nil) {
         self.entitlements = entitlements
         self.expenseRepository = expenseRepository
         self.categoryRepository = categoryRepository
         self.loanRepository = loanRepository
         self.chitFundRepository = chitFundRepository
         self.isActive = isActive
+        self.onViewAllTransactions = onViewAllTransactions
         _viewModel = State(initialValue: HomeViewModel(
             expenseRepository: expenseRepository,
             loanRepository: loanRepository,
@@ -49,7 +51,7 @@ struct HomeView : View {
                 } label: {
                     Image(systemName: "chart.bar.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(themeColors.accent)
                         .frame(width: 44, height: 44)
                 }
                 Button {
@@ -57,7 +59,7 @@ struct HomeView : View {
                 } label: {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(themeColors.accent)
                         .frame(width: 44, height: 44)
                 }
             }
@@ -87,7 +89,7 @@ struct HomeView : View {
                         )
                     }
 
-                    RecentTransactionsCard(transactions: viewModel.recentTransactions)
+                    RecentTransactionsCard(transactions: viewModel.recentTransactions, onViewAll: onViewAllTransactions)
                 }
 
             }
@@ -103,14 +105,11 @@ struct HomeView : View {
                 viewModel.loadData()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .expensesDidChange)) { _ in
+            viewModel.loadData()
+        }
         .fullScreenCover(isPresented: $isSettingsPresented) {
-            SettingsView(
-                entitlements: entitlements,
-                expenseRepository: expenseRepository,
-                categoryRepository: categoryRepository,
-                loanRepository: loanRepository,
-                chitFundRepository: chitFundRepository
-            )
+            SettingsView(entitlements: entitlements)
         }
         .fullScreenCover(isPresented: $isReportsPresented) {
             ReportsView(

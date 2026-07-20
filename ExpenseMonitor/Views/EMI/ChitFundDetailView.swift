@@ -8,13 +8,13 @@ import Charts
 
 struct ChitFundDetailView: View {
     let chitFund: ChitFund
-    let repository: ChitFundRepository
-    let expenseRepository: ExpenseRepository
     var onChange: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.chitFundRepository) private var repository
+    @Environment(\.expenseRepository) private var expenseRepository
 
     @State private var isDeleteConfirmationPresented = false
     @State private var isPayoutSheetPresented = false
@@ -113,7 +113,7 @@ struct ChitFundDetailView: View {
             }
         }
         .fullScreenCover(isPresented: $isEditPresented) {
-            AddChitFundView(repository: repository, existingChitFund: chitFund, onSave: { onChange?() })
+            AddChitFundView(existingChitFund: chitFund, onSave: { onChange?() })
         }
     }
 
@@ -284,7 +284,7 @@ struct ChitFundDetailView: View {
                 if chitFund.penaltyAmount(for: contribution.id) != nil {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 9))
-                        .foregroundStyle(themeColors.expense)
+                        .foregroundStyle(foreground)
                 }
                 if isPayoutMonth {
                     Image(systemName: "star.fill")
@@ -552,10 +552,10 @@ private struct ConfirmPaymentSheet: View {
 
 #Preview {
     ChitFundDetailView(
-        chitFund: ChitFund(id: "preview", name: "Office Chit 2026", monthlyContribution: 5000, chitValue: 100000, startDate: Date(), numberOfMonths: 20),
-        repository: PreviewChitFundRepository(),
-        expenseRepository: PreviewExpenseRepository()
+        chitFund: ChitFund(id: "preview", name: "Office Chit 2026", monthlyContribution: 5000, chitValue: 100000, startDate: Date(), numberOfMonths: 20)
     )
+    .environment(\.chitFundRepository, PreviewChitFundRepository())
+    .environment(\.expenseRepository, PreviewExpenseRepository())
 }
 
 private class PreviewChitFundRepository: ChitFundRepository {

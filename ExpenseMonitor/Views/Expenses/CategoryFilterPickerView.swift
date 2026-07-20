@@ -6,12 +6,12 @@
 import SwiftUI
 
 struct CategoryFilterPickerView: View {
-    let categoryRepository: CategoryRepository
     @Binding var selectedCategories: Set<String>
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.categoryRepository) private var categoryRepository
 
     @State private var categories: [Category] = []
     @State private var selectedType: CategoryType = .expense
@@ -96,7 +96,8 @@ struct CategoryFilterPickerView: View {
 }
 
 #Preview {
-    CategoryFilterPickerView(categoryRepository: PreviewCategoryRepository(), selectedCategories: .constant([]))
+    CategoryFilterPickerView(selectedCategories: .constant([]))
+        .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
 private class PreviewCategoryRepository: CategoryRepository {

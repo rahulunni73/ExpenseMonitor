@@ -11,7 +11,6 @@ struct ExpensesHeaderView: View {
     @Binding var searchText: String
     @Binding var typeFilter: CategoryType?
     @Binding var categoryFilters: Set<String>
-    let categoryRepository: CategoryRepository
     let expenses: [Expense]
     let totalExpense: Double
     let totalIncome: Double
@@ -42,7 +41,7 @@ struct ExpensesHeaderView: View {
                 } label: {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 20))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(themeColors.accent)
                         .frame(width: 44, height: 44)
                 }
                 Button {
@@ -50,7 +49,7 @@ struct ExpensesHeaderView: View {
                 } label: {
                     Image(systemName: "calendar")
                         .font(.system(size: 20))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(themeColors.accent)
                         .frame(width: 44, height: 44)
                 }
                 Button {
@@ -109,8 +108,7 @@ struct ExpensesHeaderView: View {
                 SearchFilterView(
                     searchText: $searchText,
                     typeFilter: $typeFilter,
-                    categoryFilters: $categoryFilters,
-                    categoryRepository: categoryRepository
+                    categoryFilters: $categoryFilters
                 )
             }
         }
@@ -137,12 +135,12 @@ struct ExpensesHeaderView: View {
         searchText: .constant(""),
         typeFilter: .constant(nil),
         categoryFilters: .constant([]),
-        categoryRepository: PreviewCategoryRepository(),
         expenses: [],
         totalExpense: 4200,
         totalIncome: 50000,
         balance: 45800
     )
+    .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
 private class PreviewCategoryRepository: CategoryRepository {

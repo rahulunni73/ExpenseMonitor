@@ -7,12 +7,11 @@ import SwiftUI
 import SwiftData
 
 struct ManageCategoriesView: View {
-    let categoryRepository: CategoryRepository
-    let expenseRepository: ExpenseRepository
-
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.categoryRepository) private var categoryRepository
+    @Environment(\.expenseRepository) private var expenseRepository
 
     @State private var categories: [Category] = []
     @State private var selectedType: CategoryType = .expense
@@ -65,12 +64,12 @@ struct ManageCategoriesView: View {
             reload()
         }
         .sheet(isPresented: $isCreatePresented) {
-            CreateCategoryView(categoryRepository: categoryRepository, initialType: selectedType) { _ in
+            CreateCategoryView(initialType: selectedType) { _ in
                 reload()
             }
         }
         .sheet(item: $categoryForEdit) { category in
-            CreateCategoryView(categoryRepository: categoryRepository, expenseRepository: expenseRepository, existingCategory: category) { _ in
+            CreateCategoryView(existingCategory: category) { _ in
                 reload()
             }
         }
@@ -137,8 +136,7 @@ struct ManageCategoriesView: View {
         for: Expense.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
-    ManageCategoriesView(
-        categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
-        expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider())
-    )
+    ManageCategoriesView()
+        .environment(\.categoryRepository, DefaultCategoryRepository(modelContext: container.mainContext))
+        .environment(\.expenseRepository, DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
 }

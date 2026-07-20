@@ -8,8 +8,6 @@ import SwiftUI
 struct TransactionListSheet: View {
     let title: String
     let expenses: [Expense]
-    let expenseRepository: ExpenseRepository
-    let categoryRepository: CategoryRepository
     var onChange: (() -> Void)? = nil
 
     @State private var currentExpenses: [Expense]
@@ -20,12 +18,11 @@ struct TransactionListSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.expenseRepository) private var expenseRepository
 
-    init(title: String, expenses: [Expense], expenseRepository: ExpenseRepository, categoryRepository: CategoryRepository, onChange: (() -> Void)? = nil) {
+    init(title: String, expenses: [Expense], onChange: (() -> Void)? = nil) {
         self.title = title
         self.expenses = expenses
-        self.expenseRepository = expenseRepository
-        self.categoryRepository = categoryRepository
         self.onChange = onChange
         _currentExpenses = State(initialValue: expenses)
     }
@@ -91,8 +88,6 @@ struct TransactionListSheet: View {
         }
         .fullScreenCover(item: $expenseToEdit) { expense in
             AddExpenseView(
-                repository: expenseRepository,
-                categoryRepository: categoryRepository,
                 existingExpense: expense,
                 onSave: { onChange?() }
             )
@@ -116,10 +111,10 @@ struct TransactionListSheet: View {
         title: "Food & Dining",
         expenses: [
             Expense(id: "1", title: "Groceries", amount: 450, category: "Food & Dining", categoryIcon: "fork.knife")
-        ],
-        expenseRepository: PreviewExpenseRepository(),
-        categoryRepository: PreviewCategoryRepository()
+        ]
     )
+    .environment(\.expenseRepository, PreviewExpenseRepository())
+    .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
 private class PreviewExpenseRepository: ExpenseRepository {

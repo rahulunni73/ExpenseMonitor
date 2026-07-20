@@ -103,8 +103,6 @@ struct ReportsView: View {
             TransactionListSheet(
                 title: drillDown.title,
                 expenses: drillDown.expenses,
-                expenseRepository: expenseRepository,
-                categoryRepository: categoryRepository,
                 onChange: { viewModel.loadData() }
             )
         }

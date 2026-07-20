@@ -7,6 +7,7 @@ import SwiftUI
 
 struct RecentTransactionsCard: View {
     let transactions: [Expense]
+    var onViewAll: (() -> Void)? = nil
 
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
@@ -17,9 +18,14 @@ struct RecentTransactionsCard: View {
                 Text("Recent Transactions")
                     .font(typography.headline)
                 Spacer()
-                Text("View All")
-                    .font(typography.subheadline)
-                    .foregroundStyle(themeColors.accent)
+                Button {
+                    onViewAll?()
+                } label: {
+                    Text("View All")
+                        .font(typography.subheadline)
+                        .foregroundStyle(themeColors.accent)
+                }
+                .buttonStyle(.plain)
             }
 
             VStack(spacing: 8) {

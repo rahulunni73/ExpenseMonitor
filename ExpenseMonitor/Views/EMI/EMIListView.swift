@@ -14,7 +14,6 @@ private enum EMISegment: String, CaseIterable {
 struct EMIListView: View {
     let repository: LoanRepository
     let chitFundRepository: ChitFundRepository
-    let expenseRepository: ExpenseRepository
     let isActive: Bool
 
     @State private var viewModel: EMIViewModel
@@ -28,10 +27,9 @@ struct EMIListView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(repository: LoanRepository, chitFundRepository: ChitFundRepository, expenseRepository: ExpenseRepository, isActive: Bool) {
+    init(repository: LoanRepository, chitFundRepository: ChitFundRepository, isActive: Bool) {
         self.repository = repository
         self.chitFundRepository = chitFundRepository
-        self.expenseRepository = expenseRepository
         self.isActive = isActive
         _viewModel = State(initialValue: EMIViewModel(repository: repository))
         _chitFundViewModel = State(initialValue: ChitFundViewModel(repository: chitFundRepository))
@@ -86,16 +84,16 @@ struct EMIListView: View {
             }
         }
         .fullScreenCover(isPresented: $isAddLoanPresented) {
-            AddLoanView(repository: repository, onSave: { viewModel.loadLoans(); rescheduleReminders() })
+            AddLoanView(onSave: { viewModel.loadLoans(); rescheduleReminders() })
         }
         .fullScreenCover(item: $loanForDetail, onDismiss: { viewModel.loadLoans(); rescheduleReminders() }) { loan in
-            LoanDetailView(loan: loan, repository: repository, expenseRepository: expenseRepository, onChange: { viewModel.loadLoans(); rescheduleReminders() })
+            LoanDetailView(loan: loan, onChange: { viewModel.loadLoans(); rescheduleReminders() })
         }
         .fullScreenCover(isPresented: $isAddChitFundPresented) {
-            AddChitFundView(repository: chitFundRepository, onSave: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
+            AddChitFundView(onSave: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
         }
         .fullScreenCover(item: $chitFundForDetail, onDismiss: { chitFundViewModel.loadChitFunds(); rescheduleReminders() }) { chitFund in
-            ChitFundDetailView(chitFund: chitFund, repository: chitFundRepository, expenseRepository: expenseRepository, onChange: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
+            ChitFundDetailView(chitFund: chitFund, onChange: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
         }
     }
 
@@ -274,7 +272,7 @@ struct EMIListView: View {
     EMIListView(
         repository: DefaultLoanRepository(modelContext: container.mainContext),
         chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext),
-        expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
         isActive: true
     )
+    .environment(\.expenseRepository, DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
 }

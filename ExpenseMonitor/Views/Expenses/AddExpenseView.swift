@@ -6,14 +6,14 @@
 import SwiftUI
 
 struct AddExpenseView: View {
-    let repository: ExpenseRepository
-    let categoryRepository: CategoryRepository
     var existingExpense: Expense? = nil
     var onSave: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.expenseRepository) private var repository
+    @Environment(\.categoryRepository) private var categoryRepository
 
     @State private var title = ""
     @State private var amountText = "0"
@@ -102,7 +102,7 @@ struct AddExpenseView: View {
             }
         }
         .fullScreenCover(isPresented: $isCreateCategoryPresented) {
-            CreateCategoryView(categoryRepository: categoryRepository, initialType: selectedType) { newCategory in
+            CreateCategoryView(initialType: selectedType) { newCategory in
                 categories.append(newCategory)
                 selectedCategory = newCategory
             }
@@ -300,7 +300,9 @@ struct AddExpenseView: View {
 }
 
 #Preview {
-    AddExpenseView(repository: PreviewExpenseRepository(), categoryRepository: PreviewCategoryRepository())
+    AddExpenseView()
+        .environment(\.expenseRepository, PreviewExpenseRepository())
+        .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
 private class PreviewExpenseRepository: ExpenseRepository {

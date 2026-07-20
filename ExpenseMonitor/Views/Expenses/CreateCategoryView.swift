@@ -6,22 +6,20 @@
 import SwiftUI
 
 struct CreateCategoryView: View {
-    let categoryRepository: CategoryRepository
-    var expenseRepository: ExpenseRepository? = nil
     var existingCategory: Category? = nil
     var onCreate: ((Category) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.categoryRepository) private var categoryRepository
+    @Environment(\.expenseRepository) private var expenseRepository
 
     @State private var name: String
     @State private var selectedIcon: String
     @State private var type: CategoryType
 
-    init(categoryRepository: CategoryRepository, expenseRepository: ExpenseRepository? = nil, existingCategory: Category? = nil, initialType: CategoryType = .expense, onCreate: ((Category) -> Void)? = nil) {
-        self.categoryRepository = categoryRepository
-        self.expenseRepository = expenseRepository
+    init(existingCategory: Category? = nil, initialType: CategoryType = .expense, onCreate: ((Category) -> Void)? = nil) {
         self.existingCategory = existingCategory
         self.onCreate = onCreate
         _type = State(initialValue: existingCategory?.type ?? initialType)
@@ -146,12 +144,10 @@ struct CreateCategoryView: View {
             existingCategory.type = type
             categoryRepository.update(existingCategory)
 
-            if let expenseRepository {
-                for expense in expenseRepository.fetchAll() where expense.category == oldName {
-                    expense.category = name
-                    expense.categoryIcon = selectedIcon
-                    expenseRepository.update(expense)
-                }
+            for expense in expenseRepository.fetchAll() where expense.category == oldName {
+                expense.category = name
+                expense.categoryIcon = selectedIcon
+                expenseRepository.update(expense)
             }
             onCreate?(existingCategory)
         } else {
@@ -170,7 +166,9 @@ struct CreateCategoryView: View {
 }
 
 #Preview {
-    CreateCategoryView(categoryRepository: PreviewCategoryRepository())
+    CreateCategoryView()
+        .environment(\.categoryRepository, PreviewCategoryRepository())
+        .environment(\.expenseRepository, PreviewExpenseRepository())
 }
 
 private class PreviewCategoryRepository: CategoryRepository {
@@ -178,4 +176,11 @@ private class PreviewCategoryRepository: CategoryRepository {
     func add(_ category: Category) {}
     func update(_ category: Category) {}
     func delete(_ category: Category) {}
+}
+
+private class PreviewExpenseRepository: ExpenseRepository {
+    func fetchAll() -> [Expense] { [] }
+    func add(_ expense: Expense) {}
+    func update(_ expense: Expense) {}
+    func delete(_ expense: Expense) {}
 }

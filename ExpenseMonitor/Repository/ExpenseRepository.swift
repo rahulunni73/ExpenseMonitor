@@ -56,17 +56,20 @@ class DefaultExpenseRepository: ExpenseRepository {
         modelContext.insert(expense)
         try? modelContext.save()
         syncIfNeeded()
+        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
     }
-    
+
     func update(_ expense: Expense) {
         try? modelContext.save()
         syncIfNeeded()
+        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
     }
 
     func delete(_ expense: Expense) {
         modelContext.delete(expense)
         try? modelContext.save()
         syncIfNeeded()
+        NotificationCenter.default.post(name: .expensesDidChange, object: nil)
     }
     
     

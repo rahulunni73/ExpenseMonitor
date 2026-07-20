@@ -6,13 +6,13 @@
 import SwiftUI
 
 struct AddChitFundView: View {
-    let repository: ChitFundRepository
     var existingChitFund: ChitFund? = nil
     var onSave: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.chitFundRepository) private var repository
 
     @State private var name = ""
     @State private var organizer = ""
@@ -164,7 +164,8 @@ struct AddChitFundView: View {
 }
 
 #Preview {
-    AddChitFundView(repository: PreviewChitFundRepository())
+    AddChitFundView()
+        .environment(\.chitFundRepository, PreviewChitFundRepository())
 }
 
 private class PreviewChitFundRepository: ChitFundRepository {

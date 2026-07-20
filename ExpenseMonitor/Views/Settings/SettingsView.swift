@@ -9,15 +9,15 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     let entitlements: EntitlementsProviding
-    let expenseRepository: ExpenseRepository
-    let categoryRepository: CategoryRepository
-    let loanRepository: LoanRepository
-    let chitFundRepository: ChitFundRepository
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
     @Environment(ThemeManager.self) private var themeManager
+    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.categoryRepository) private var categoryRepository
+    @Environment(\.loanRepository) private var loanRepository
+    @Environment(\.chitFundRepository) private var chitFundRepository
 
     @State private var isExporting = false
     @State private var exportDocument: BackupDocument?
@@ -180,7 +180,7 @@ struct SettingsView: View {
             }
         }
         .sheet(isPresented: $isManageCategoriesPresented) {
-            ManageCategoriesView(categoryRepository: categoryRepository, expenseRepository: expenseRepository)
+            ManageCategoriesView()
         }
         .sheet(isPresented: $isThemePickerPresented) {
             ThemePickerView()
@@ -304,12 +304,10 @@ struct SettingsView: View {
         for: Expense.self, Category.self, Loan.self, ChitFund.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
-    SettingsView(
-        entitlements: StubEntitlementsProvider(),
-        expenseRepository: DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()),
-        categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext),
-        loanRepository: DefaultLoanRepository(modelContext: container.mainContext),
-        chitFundRepository: DefaultChitFundRepository(modelContext: container.mainContext)
-    )
-    .environment(ThemeManager())
+    SettingsView(entitlements: StubEntitlementsProvider())
+        .environment(ThemeManager())
+        .environment(\.expenseRepository, DefaultExpenseRepository(modelContext: container.mainContext, entitlements: StubEntitlementsProvider()))
+        .environment(\.categoryRepository, DefaultCategoryRepository(modelContext: container.mainContext))
+        .environment(\.loanRepository, DefaultLoanRepository(modelContext: container.mainContext))
+        .environment(\.chitFundRepository, DefaultChitFundRepository(modelContext: container.mainContext))
 }

@@ -9,7 +9,6 @@ struct SearchFilterView: View {
     @Binding var searchText: String
     @Binding var typeFilter: CategoryType?
     @Binding var categoryFilters: Set<String>
-    let categoryRepository: CategoryRepository
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
@@ -130,7 +129,7 @@ struct SearchFilterView: View {
             pendingCategoryFilters = categoryFilters
         }
         .fullScreenCover(isPresented: $isCategoryPickerPresented) {
-            CategoryFilterPickerView(categoryRepository: categoryRepository, selectedCategories: $pendingCategoryFilters)
+            CategoryFilterPickerView(selectedCategories: $pendingCategoryFilters)
         }
     }
 
@@ -151,9 +150,9 @@ struct SearchFilterView: View {
     SearchFilterView(
         searchText: .constant(""),
         typeFilter: .constant(nil),
-        categoryFilters: .constant([]),
-        categoryRepository: PreviewCategoryRepository()
+        categoryFilters: .constant([])
     )
+    .environment(\.categoryRepository, PreviewCategoryRepository())
 }
 
 private class PreviewCategoryRepository: CategoryRepository {

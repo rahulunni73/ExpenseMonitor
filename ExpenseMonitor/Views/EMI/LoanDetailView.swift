@@ -8,13 +8,13 @@ import Charts
 
 struct LoanDetailView: View {
     let loan: Loan
-    let repository: LoanRepository
-    let expenseRepository: ExpenseRepository
     var onChange: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.loanRepository) private var repository
+    @Environment(\.expenseRepository) private var expenseRepository
 
     @State private var isDeleteConfirmationPresented = false
     @State private var pendingLatePayment: PendingPayment?
@@ -103,7 +103,7 @@ struct LoanDetailView: View {
             }
         }
         .fullScreenCover(isPresented: $isEditPresented) {
-            AddLoanView(repository: repository, existingLoan: loan, onSave: { onChange?() })
+            AddLoanView(existingLoan: loan, onSave: { onChange?() })
         }
     }
 
@@ -223,7 +223,7 @@ struct LoanDetailView: View {
             if loan.penaltyAmount(for: installment.id) != nil {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 10))
-                    .foregroundStyle(themeColors.expense)
+                    .foregroundStyle(foreground)
                     .padding(4)
             }
         }
@@ -403,10 +403,10 @@ private struct ConfirmPaymentSheet: View {
 
 #Preview {
     LoanDetailView(
-        loan: Loan(id: "preview", name: "Home Loan", principalAmount: 250000, installmentAmount: 12500, startDate: Date(), numberOfInstallments: 24),
-        repository: PreviewLoanRepository(),
-        expenseRepository: PreviewExpenseRepository()
+        loan: Loan(id: "preview", name: "Home Loan", principalAmount: 250000, installmentAmount: 12500, startDate: Date(), numberOfInstallments: 24)
     )
+    .environment(\.loanRepository, PreviewLoanRepository())
+    .environment(\.expenseRepository, PreviewExpenseRepository())
 }
 
 private class PreviewLoanRepository: LoanRepository {

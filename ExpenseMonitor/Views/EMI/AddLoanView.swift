@@ -6,13 +6,13 @@
 import SwiftUI
 
 struct AddLoanView: View {
-    let repository: LoanRepository
     var existingLoan: Loan? = nil
     var onSave: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.loanRepository) private var repository
 
     @State private var name = ""
     @State private var type: LoanType = .loan
@@ -172,7 +172,8 @@ struct AddLoanView: View {
 }
 
 #Preview {
-    AddLoanView(repository: PreviewLoanRepository())
+    AddLoanView()
+        .environment(\.loanRepository, PreviewLoanRepository())
 }
 
 private class PreviewLoanRepository: LoanRepository {

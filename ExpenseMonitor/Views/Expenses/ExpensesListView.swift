@@ -11,7 +11,6 @@ import SwiftData
 struct ExpensesListView: View {
 
     let repository: ExpenseRepository
-    let categoryRepository: CategoryRepository
     @State private var viewModel: ExpensesViewModel
     let isActive: Bool
     @State private var isAddExpensePresented = false
@@ -22,9 +21,8 @@ struct ExpensesListView: View {
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
 
-    init(repository: ExpenseRepository, categoryRepository: CategoryRepository, isActive: Bool) {
+    init(repository: ExpenseRepository, isActive: Bool) {
         self.repository = repository
-        self.categoryRepository = categoryRepository
         self.isActive = isActive
         _viewModel = State(initialValue: ExpensesViewModel(repository: repository))
     }
@@ -39,7 +37,6 @@ struct ExpensesListView: View {
                 searchText: $viewModel.searchText,
                 typeFilter: $viewModel.typeFilter,
                 categoryFilters: $viewModel.categoryFilters,
-                categoryRepository: categoryRepository,
                 expenses: viewModel.expenses,
                 totalExpense: viewModel.totalExpense,
                 totalIncome: viewModel.totalIncome,
@@ -97,6 +94,9 @@ struct ExpensesListView: View {
                 viewModel.loadExpenses()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .expensesDidChange)) { _ in
+            viewModel.loadExpenses()
+        }
         .onChange(of: expenseForDetail == nil) { _, isNil in
             if isNil, let pendingEditExpense {
                 expenseToEdit = pendingEditExpense
@@ -118,18 +118,12 @@ struct ExpensesListView: View {
         }
         .fullScreenCover(item: $expenseToEdit) { expense in
             AddExpenseView(
-                repository: repository,
-                categoryRepository: categoryRepository,
                 existingExpense: expense,
                 onSave: { viewModel.loadExpenses() }
             )
         }
         .fullScreenCover(isPresented: $isAddExpensePresented) {
-            AddExpenseView(
-                repository: repository,
-                categoryRepository: categoryRepository,
-                onSave: { viewModel.loadExpenses() }
-            )
+            AddExpenseView(onSave: { viewModel.loadExpenses() })
         }
     }
 
@@ -174,7 +168,7 @@ struct ExpensesListView: View {
 
 #Preview {
     let container = try! ModelContainer(
-        for: Expense.self,
+        for: Expense.self, Category.self,
         configurations: ModelConfiguration(isStoredInMemoryOnly: true)
     )
     ExpensesListView(
@@ -182,6 +176,7 @@ struct ExpensesListView: View {
             modelContext: container.mainContext,
             entitlements: StubEntitlementsProvider()
         ),
-        categoryRepository: DefaultCategoryRepository(modelContext: container.mainContext), isActive: true
+        isActive: true
     )
+    .environment(\.categoryRepository, DefaultCategoryRepository(modelContext: container.mainContext))
 }

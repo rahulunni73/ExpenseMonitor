@@ -33,10 +33,13 @@ enum AppTab {
 
 
 struct ContentView: View {
-    
-    @Environment(\.modelContext) private var modelContext
+
     @Environment(\.themeColors) private var themeColors
     @Environment(\.typography) private var typography
+    @Environment(\.expenseRepository) private var expenseRepository
+    @Environment(\.categoryRepository) private var categoryRepository
+    @Environment(\.loanRepository) private var loanRepository
+    @Environment(\.chitFundRepository) private var chitFundRepository
     @State private var selectedTab: AppTab = .home
 
     var body: some View {
@@ -44,36 +47,26 @@ struct ContentView: View {
             ZStack {
                 HomeView(
                     entitlements: StubEntitlementsProvider(),
-                    expenseRepository: DefaultExpenseRepository(
-                        modelContext: modelContext,
-                        entitlements: StubEntitlementsProvider()
-                    ),
-                    categoryRepository: DefaultCategoryRepository(modelContext: modelContext),
-                    loanRepository: DefaultLoanRepository(modelContext: modelContext),
-                    chitFundRepository: DefaultChitFundRepository(modelContext: modelContext),
-                    isActive: selectedTab == .home
+                    expenseRepository: expenseRepository,
+                    categoryRepository: categoryRepository,
+                    loanRepository: loanRepository,
+                    chitFundRepository: chitFundRepository,
+                    isActive: selectedTab == .home,
+                    onViewAllTransactions: { selectedTab = .expenses }
                 )
                     .opacity(selectedTab == .home ? 1 : 0)
                     .allowsHitTesting(selectedTab == .home)
 
                 ExpensesListView(
-                    repository: DefaultExpenseRepository(
-                        modelContext: modelContext,
-                        entitlements: StubEntitlementsProvider()
-                    ),
-                    categoryRepository: DefaultCategoryRepository(modelContext: modelContext),
+                    repository: expenseRepository,
                     isActive: selectedTab == .expenses
                 )
                 .opacity(selectedTab == .expenses ? 1 : 0)
                 .allowsHitTesting(selectedTab == .expenses)
-                
+
                 EMIListView(
-                    repository: DefaultLoanRepository(modelContext: modelContext),
-                    chitFundRepository: DefaultChitFundRepository(modelContext: modelContext),
-                    expenseRepository: DefaultExpenseRepository(
-                        modelContext: modelContext,
-                        entitlements: StubEntitlementsProvider()
-                    ),
+                    repository: loanRepository,
+                    chitFundRepository: chitFundRepository,
                     isActive: selectedTab == .emi
                 )
                 .opacity(selectedTab == .emi ? 1 : 0)
@@ -84,8 +77,6 @@ struct ContentView: View {
             customTabBar
         }
         .onAppear {
-            let loanRepository = DefaultLoanRepository(modelContext: modelContext)
-            let chitFundRepository = DefaultChitFundRepository(modelContext: modelContext)
             NotificationService.rescheduleReminders(loans: loanRepository.fetchAll(), chitFunds: chitFundRepository.fetchAll())
         }
     }
