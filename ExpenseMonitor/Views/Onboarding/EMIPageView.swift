@@ -15,13 +15,7 @@ struct EMIPageView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            heroCard
-
-            HStack(spacing: 16) {
-                miniCard(percent: 0.4, color: themeColors.expense, label: "Chit Cycle 4/10", amount: "₹12,000")
-                miniCard(percent: 0.8, color: themeColors.accent, label: "Car Loan", amount: "₹8,500")
-            }
-            .padding(.horizontal, 32)
+            previewStage
 
             VStack(spacing: 12) {
                 Text("Smart EMI Tracking")
@@ -40,20 +34,44 @@ struct EMIPageView: View {
         }
     }
 
-    private var heroCard: some View {
+    private var previewStage: some View {
+        ZStack {
+            BouncingHeroRingCard(percent: 0.7, label: "Home Loan EMI", amount: "₹45,000", caption: "Due in 5 days")
+
+            FloatingMiniRingCard(percent: 0.4, color: themeColors.expense, label: "Chit Cycle 4/10", amount: "₹12,000", offset: CGSize(width: 95, height: -120), animationDelay: 0)
+
+            FloatingMiniRingCard(percent: 0.8, color: themeColors.accent, label: "Car Loan", amount: "₹8,500", offset: CGSize(width: -95, height: 110), animationDelay: 1.5)
+        }
+        .frame(height: 340)
+        .padding(.horizontal, 24)
+    }
+}
+
+private struct BouncingHeroRingCard: View {
+    let percent: Double
+    let label: String
+    let amount: String
+    let caption: String
+
+    @State private var isBouncing = false
+
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
+    var body: some View {
         VStack(spacing: 12) {
-            ring(percent: 0.7, color: themeColors.accent, size: 110) {
-                Text("70%")
+            ProgressRing(percent: percent, color: themeColors.accent, size: 110) {
+                Text("\(Int(percent * 100))%")
                     .font(typography.subheadlineBold)
             }
 
             VStack(spacing: 2) {
-                Text("Home Loan EMI")
+                Text(label)
                     .font(typography.subheadline)
-                Text("₹45,000")
+                Text(amount)
                     .font(typography.amount(size: 20))
                     .foregroundStyle(themeColors.accent)
-                Text("Due in 5 days")
+                Text(caption)
                     .font(typography.caption)
                     .foregroundStyle(.secondary)
             }
@@ -65,12 +83,31 @@ struct EMIPageView: View {
             RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
         }
-        .padding(.horizontal, 32)
+        .offset(y: isBouncing ? -6 : 6)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                isBouncing = true
+            }
+        }
     }
+}
 
-    private func miniCard(percent: Double, color: Color, label: String, amount: String) -> some View {
+private struct FloatingMiniRingCard: View {
+    let percent: Double
+    let color: Color
+    let label: String
+    let amount: String
+    let offset: CGSize
+    let animationDelay: Double
+
+    @State private var isFloating = false
+
+    @Environment(\.themeColors) private var themeColors
+    @Environment(\.typography) private var typography
+
+    var body: some View {
         VStack(spacing: 8) {
-            ring(percent: percent, color: color, size: 64) {
+            ProgressRing(percent: percent, color: color, size: 64) {
                 Text("\(Int(percent * 100))%")
                     .font(typography.caption2)
             }
@@ -81,7 +118,7 @@ struct EMIPageView: View {
             Text(amount)
                 .font(typography.subheadlineBold)
         }
-        .frame(maxWidth: .infinity)
+        .frame(width: 120)
         .padding()
         .background(themeColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -89,9 +126,32 @@ struct EMIPageView: View {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
         }
+        .offset(x: offset.width, y: isFloating ? offset.height - 8 : offset.height + 8)
+        .rotationEffect(.degrees(isFloating ? 2 : -2))
+        .onAppear {
+            withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true).delay(animationDelay)) {
+                isFloating = true
+            }
+        }
+    }
+}
+
+private struct ProgressRing<Label: View>: View {
+    let percent: Double
+    let color: Color
+    let size: CGFloat
+    let label: Label
+
+    @Environment(\.themeColors) private var themeColors
+
+    init(percent: Double, color: Color, size: CGFloat, @ViewBuilder label: () -> Label) {
+        self.percent = percent
+        self.color = color
+        self.size = size
+        self.label = label()
     }
 
-    private func ring<Label: View>(percent: Double, color: Color, size: CGFloat, @ViewBuilder label: () -> Label) -> some View {
+    var body: some View {
         ZStack {
             Chart([("paid", percent), ("remaining", 1 - percent)], id: \.0) { item in
                 SectorMark(angle: .value("Value", item.1), innerRadius: .ratio(0.72))
@@ -100,7 +160,7 @@ struct EMIPageView: View {
             }
             .frame(width: size, height: size)
 
-            label()
+            label
         }
     }
 }
