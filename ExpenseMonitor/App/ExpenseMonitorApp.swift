@@ -10,16 +10,17 @@ import SwiftData
 
 @main
 struct ExpenseMonitorApp: App {
-
+    
     let sharedModelContainer: ModelContainer
     let transactionRepository: TransactionRepository
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
     let debtRepository: DebtRepository
-
+    
     @State private var themeManager = ThemeManager()
-
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    
     init() {
         let schema = Schema([
             Transaction.self,
@@ -29,7 +30,7 @@ struct ExpenseMonitorApp: App {
             Debt.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        
         let container: ModelContainer
         do {
             container = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -37,7 +38,7 @@ struct ExpenseMonitorApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
         sharedModelContainer = container
-
+        
         // Constructed exactly once, here, rather than fresh on every ContentView re-render —
         // every screen in the app pulls these from the environment instead of taking them as
         // init params.
@@ -48,18 +49,24 @@ struct ExpenseMonitorApp: App {
         chitFundRepository = DefaultChitFundRepository(modelContext: context)
         debtRepository = DefaultDebtRepository(modelContext: context)
     }
-
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(themeManager)
-                .environment(\.themeColors, themeManager.currentTheme.colors)
-                .environment(\.typography, themeManager.currentTypography)
-                .environment(\.transactionRepository, transactionRepository)
-                .environment(\.categoryRepository, categoryRepository)
-                .environment(\.loanRepository, loanRepository)
-                .environment(\.chitFundRepository, chitFundRepository)
-                .environment(\.debtRepository, debtRepository)
+            Group {
+                if hasSeenOnboarding {
+                    ContentView()
+                } else {
+                    OnboardingView()
+                }
+            }
+            .environment(themeManager)
+            .environment(\.themeColors, themeManager.currentTheme.colors)
+            .environment(\.typography, themeManager.currentTypography)
+            .environment(\.transactionRepository, transactionRepository)
+            .environment(\.categoryRepository, categoryRepository)
+            .environment(\.loanRepository, loanRepository)
+            .environment(\.chitFundRepository, chitFundRepository)
+            .environment(\.debtRepository, debtRepository)
         }
         .modelContainer(sharedModelContainer)
     }
