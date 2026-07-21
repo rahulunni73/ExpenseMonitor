@@ -31,6 +31,8 @@ struct SettingsView: View {
     @State private var isThemePickerPresented = false
     @AppStorage("emiRemindersEnabled") private var emiRemindersEnabled = false
     @AppStorage("debtsTabEnabled") private var debtsTabEnabled = false
+    @AppStorage("appLockEnabled") private var appLockEnabled = false
+    @State private var isPINSetupPresented = false
     @State private var isNotificationPermissionDeniedAlertPresented = false
 
     private var appVersion: String {
@@ -69,6 +71,24 @@ struct SettingsView: View {
                 } else {
                     emiRemindersEnabled = false
                     rescheduleReminders()
+                }
+            }
+        )
+    }
+    
+    private var appLockToggleBinding: Binding<Bool> {
+        Binding(
+            get: { appLockEnabled },
+            set: { newValue in
+                if newValue {
+                    if KeychainService.hasPIN {
+                        appLockEnabled = true
+                    } else {
+                        isPINSetupPresented = true
+                    }
+                } else {
+                    appLockEnabled = false
+                    KeychainService.deletePIN()
                 }
             }
         )
@@ -153,6 +173,25 @@ struct SettingsView: View {
                 } footer: {
                     Text("Get a reminder the day before each EMI or chit fund installment is due.")
                 }
+                
+                Section {
+                    Toggle(isOn: appLockToggleBinding) {
+                        HStack {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(.white)
+                                .frame(width: 28, height: 28)
+                                .background(Color(.systemIndigo))
+                                .clipShape(RoundedRectangle(cornerRadius: 7))
+                            Text("App Lock")
+                                .font(typography.body)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Security")
+                } footer: {
+                    Text("Require Face ID, Touch ID, or a PIN to open ExpenseMonitor.")
+                }
 
                 Section {
                     Button {
@@ -204,6 +243,11 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $isThemePickerPresented) {
             ThemePickerView()
+        }
+        .fullScreenCover(isPresented: $isPINSetupPresented) {
+            PINSetupView {
+                appLockEnabled = true
+            }
         }
         .fileExporter(isPresented: $isExporting, document: exportDocument, contentType: .json, defaultFilename: exportFilename) { result in
             if case .failure = result {

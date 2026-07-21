@@ -20,6 +20,9 @@ struct ExpenseMonitorApp: App {
     
     @State private var themeManager = ThemeManager()
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @AppStorage("appLockEnabled") private var appLockEnabled = false
+    @State private var isUnlocked = false
+    @Environment(\.scenePhase) private var scenePhase
     
     init() {
         let schema = Schema([
@@ -54,7 +57,13 @@ struct ExpenseMonitorApp: App {
         WindowGroup {
             Group {
                 if hasSeenOnboarding {
-                    ContentView()
+                    if appLockEnabled && !isUnlocked {
+                        AppLockView {
+                            isUnlocked = true
+                        }
+                    } else {
+                        ContentView()
+                    }
                 } else {
                     OnboardingView()
                 }
@@ -67,6 +76,11 @@ struct ExpenseMonitorApp: App {
             .environment(\.loanRepository, loanRepository)
             .environment(\.chitFundRepository, chitFundRepository)
             .environment(\.debtRepository, debtRepository)
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .background {
+                    isUnlocked = false
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
