@@ -12,15 +12,17 @@ struct BackupService {
     let categoryRepository: CategoryRepository
     let loanRepository: LoanRepository
     let chitFundRepository: ChitFundRepository
+    let debtRepository: DebtRepository
 
     func exportData() -> BackupData {
         BackupData(
-            schemaVersion: 1,
+            schemaVersion: 2,
             exportedAt: Date(),
             transactions: transactionRepository.fetchAll().map(TransactionDTO.init),
             categories: categoryRepository.fetchAll().map(CategoryDTO.init),
             loans: loanRepository.fetchAll().map(LoanDTO.init),
-            chitFunds: chitFundRepository.fetchAll().map(ChitFundDTO.init)
+            chitFunds: chitFundRepository.fetchAll().map(ChitFundDTO.init),
+            debts: debtRepository.fetchAll().map(DebtDTO.init)
         )
     }
 
@@ -29,11 +31,13 @@ struct BackupService {
         categoryRepository.fetchAll().forEach { categoryRepository.delete($0) }
         loanRepository.fetchAll().forEach { loanRepository.delete($0) }
         chitFundRepository.fetchAll().forEach { chitFundRepository.delete($0) }
+        debtRepository.fetchAll().forEach { debtRepository.delete($0) }
 
         backup.categories.forEach { categoryRepository.add($0.makeModel()) }
         backup.loans.forEach { loanRepository.add($0.makeModel()) }
         backup.chitFunds.forEach { chitFundRepository.add($0.makeModel()) }
         backup.transactions.forEach { transactionRepository.add($0.makeModel()) }
+        backup.debts.forEach { debtRepository.add($0.makeModel()) }
     }
 }
 

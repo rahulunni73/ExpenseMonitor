@@ -19,30 +19,30 @@ struct OnboardingView: View {
     var body: some View {
         
         VStack(spacing: 0) {
-            
-            ZStack(alignment: .topTrailing) {
-                
-                TabView(selection: $currentPage) {
-                    WelcomePageView()
-                        .tag(0)
 
-                    TransactionsPageView()
-                        .tag(1)
-
-                    EMIPageView()
-                        .tag(2)
-
-                    OverviewPageView()
-                        .tag(3)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                
+            HStack {
+                Spacer()
                 if currentPage < 3 {
-                                    skipButton
-                                }
-                
+                    skipButton
+                }
             }
-            
+            .frame(height: 44)
+
+            TabView(selection: $currentPage) {
+                WelcomePageView()
+                    .tag(0)
+
+                TransactionsPageView()
+                    .tag(1)
+
+                EMIPageView()
+                    .tag(2)
+
+                OverviewPageView()
+                    .tag(3)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+
             pageIndicator
             continueButton
             

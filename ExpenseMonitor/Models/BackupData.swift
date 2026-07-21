@@ -12,6 +12,48 @@ struct BackupData: Codable {
     var categories: [CategoryDTO]
     var loans: [LoanDTO]
     var chitFunds: [ChitFundDTO]
+    var debts: [DebtDTO]
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion, exportedAt, transactions, categories, loans, chitFunds, debts
+    }
+
+    init(schemaVersion: Int, exportedAt: Date, transactions: [TransactionDTO], categories: [CategoryDTO], loans: [LoanDTO], chitFunds: [ChitFundDTO], debts: [DebtDTO]) {
+        self.schemaVersion = schemaVersion
+        self.exportedAt = exportedAt
+        self.transactions = transactions
+        self.categories = categories
+        self.loans = loans
+        self.chitFunds = chitFunds
+        self.debts = debts
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        exportedAt = try container.decode(Date.self, forKey: .exportedAt)
+        transactions = try container.decode([TransactionDTO].self, forKey: .transactions)
+        categories = try container.decode([CategoryDTO].self, forKey: .categories)
+        loans = try container.decode([LoanDTO].self, forKey: .loans)
+        chitFunds = try container.decode([ChitFundDTO].self, forKey: .chitFunds)
+        // Backups exported before Debt support existed won't have this key —
+        // treat that as "no debts" instead of failing the whole restore.
+        debts = try container.decodeIfPresent([DebtDTO].self, forKey: .debts) ?? []
+    }
+}
+
+extension BackupData {
+    /// The earliest-to-latest span of every dated record in the backup (transaction dates,
+    /// loan/chit-fund start dates, debt dates) — nil only when the backup is entirely empty.
+    var dateRange: ClosedRange<Date>? {
+        var dates = transactions.map(\.date)
+        dates += loans.map(\.startDate)
+        dates += chitFunds.map(\.startDate)
+        dates += debts.map(\.date)
+
+        guard let earliest = dates.min(), let latest = dates.max() else { return nil }
+        return earliest...latest
+    }
 }
 
 struct TransactionDTO: Codable {
@@ -54,6 +96,44 @@ struct TransactionDTO: Codable {
             linkedLoanID: linkedLoanID,
             linkedChitFundID: linkedChitFundID,
             linkedInstallmentNumber: linkedInstallmentNumber
+        )
+    }
+}
+
+struct DebtDTO: Codable {
+    var id: String
+    var personName: String
+    var direction: DebtDirection
+    var amount: Double
+    var amountRepaid: Double
+    var date: Date
+    var note: String?
+    var isSettled: Bool
+    var settledDate: Date?
+
+    init(from debt: Debt) {
+        id = debt.id
+        personName = debt.personName
+        direction = debt.direction
+        amount = debt.amount
+        amountRepaid = debt.amountRepaid
+        date = debt.date
+        note = debt.note
+        isSettled = debt.isSettled
+        settledDate = debt.settledDate
+    }
+
+    func makeModel() -> Debt {
+        Debt(
+            id: id,
+            personName: personName,
+            direction: direction,
+            amount: amount,
+            amountRepaid: amountRepaid,
+            date: date,
+            note: note,
+            isSettled: isSettled,
+            settledDate: settledDate
         )
     }
 }

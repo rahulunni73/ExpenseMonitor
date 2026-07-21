@@ -18,11 +18,13 @@ struct SettingsView: View {
     @Environment(\.categoryRepository) private var categoryRepository
     @Environment(\.loanRepository) private var loanRepository
     @Environment(\.chitFundRepository) private var chitFundRepository
+    @Environment(\.debtRepository) private var debtRepository
 
     @State private var isExporting = false
     @State private var exportDocument: BackupDocument?
+    @State private var exportFilename = "ExpenseMonitor-Backup"
     @State private var isImporting = false
-    @State private var pendingImportURL: URL?
+    @State private var pendingImportBackup: BackupData?
     @State private var isRestoreConfirmationPresented = false
     @State private var isRestoreCompleteAlertPresented = false
     @State private var isImportErrorAlertPresented = false
@@ -44,14 +46,34 @@ struct SettingsView: View {
             transactionRepository: transactionRepository,
             categoryRepository: categoryRepository,
             loanRepository: loanRepository,
-            chitFundRepository: chitFundRepository
+            chitFundRepository: chitFundRepository,
+            debtRepository: debtRepository
         )
     }
 
-    private var exportFilename: String {
+    private func filename(for backup: BackupData) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        return "ExpenseMonitor-Backup-\(formatter.string(from: Date()))"
+
+        guard let range = backup.dateRange else {
+            return "ExpenseMonitor-Backup-\(formatter.string(from: backup.exportedAt))"
+        }
+
+        let start = formatter.string(from: range.lowerBound)
+        let end = formatter.string(from: range.upperBound)
+        return start == end ? "ExpenseMonitor-Backup-\(start)" : "ExpenseMonitor-Backup-\(start)-to-\(end)"
+    }
+
+    private var restoreDateRangeDescription: String {
+        guard let backup = pendingImportBackup, let range = backup.dateRange else {
+            return "This backup has no dated transactions, loans, chit funds, or debts."
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        let start = formatter.string(from: range.lowerBound)
+        let end = formatter.string(from: range.upperBound)
+        return start == end ? "This backup covers \(start)." : "This backup covers \(start) – \(end)."
     }
 
     private var emiRemindersToggleBinding: Binding<Bool> {
@@ -195,7 +217,9 @@ struct SettingsView: View {
 
                 Section {
                     Button {
-                        exportDocument = BackupDocument(data: (try? BackupData.jsonEncoder.encode(backupService.exportData())) ?? Data())
+                        let backup = backupService.exportData()
+                        exportDocument = BackupDocument(data: (try? BackupData.jsonEncoder.encode(backup)) ?? Data())
+                        exportFilename = filename(for: backup)
                         isExporting = true
                     } label: {
                         settingsActionRow(icon: "square.and.arrow.up.fill", iconColor: Color(.systemBlue), title: "Export Backup")
@@ -211,7 +235,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Data")
                 } footer: {
-                    Text("Export a complete backup of your transactions, categories, EMIs, and chit funds, or restore from a previously saved backup file.")
+                    Text("Export a complete backup of your transactions, categories, EMIs, chit funds, and debts, or restore from a previously saved backup file.")
                 }
 
                 Section("Premium") {
@@ -258,8 +282,7 @@ struct SettingsView: View {
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json]) { result in
             switch result {
             case .success(let url):
-                pendingImportURL = url
-                isRestoreConfirmationPresented = true
+                readBackup(at: url)
             case .failure:
                 importErrorMessage = "Couldn't read this backup file."
                 isImportErrorAlertPresented = true
@@ -274,10 +297,10 @@ struct SettingsView: View {
                 performImport()
             }
             Button("Cancel", role: .cancel) {
-                pendingImportURL = nil
+                pendingImportBackup = nil
             }
         } message: {
-            Text("This will permanently replace all your transactions, categories, EMIs, and chit funds with the contents of this backup. This can't be undone.")
+            Text("\(restoreDateRangeDescription) Restoring will permanently replace all your transactions, categories, EMIs, chit funds, and debts with its contents. This can't be undone.")
         }
         .alert("Restore Complete", isPresented: $isRestoreCompleteAlertPresented) {
             Button("OK") { dismiss() }
@@ -301,9 +324,7 @@ struct SettingsView: View {
         }
     }
 
-    private func performImport() {
-        guard let url = pendingImportURL else { return }
-        pendingImportURL = nil
+    private func readBackup(at url: URL) {
         guard url.startAccessingSecurityScopedResource() else {
             importErrorMessage = "Couldn't access this backup file."
             isImportErrorAlertPresented = true
@@ -312,13 +333,19 @@ struct SettingsView: View {
         defer { url.stopAccessingSecurityScopedResource() }
         do {
             let data = try Data(contentsOf: url)
-            let backup = try BackupData.jsonDecoder.decode(BackupData.self, from: data)
-            backupService.importData(backup)
-            isRestoreCompleteAlertPresented = true
+            pendingImportBackup = try BackupData.jsonDecoder.decode(BackupData.self, from: data)
+            isRestoreConfirmationPresented = true
         } catch {
             importErrorMessage = "Couldn't read this backup file."
             isImportErrorAlertPresented = true
         }
+    }
+
+    private func performImport() {
+        guard let backup = pendingImportBackup else { return }
+        pendingImportBackup = nil
+        backupService.importData(backup)
+        isRestoreCompleteAlertPresented = true
     }
 
     private func settingsRow(icon: String, iconColor: Color, title: String, detail: String) -> some View {
