@@ -47,7 +47,7 @@ struct TransactionDetailView: View {
                             .background(themeColors.accent.opacity(0.15))
                             .clipShape(Circle())
 
-                        Text(transaction.title)
+                        Text(transaction.displayTitle)
                             .font(typography.title3Bold)
 
                         Text("\(amountPrefix)\(transaction.amount.currencyFormatted)")

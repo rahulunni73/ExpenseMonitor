@@ -32,7 +32,7 @@ struct TransactionRow: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(transaction.title)
+                Text(transaction.displayTitle)
                     .font(typography.subheadline)
 
                 HStack(spacing: 4) {

@@ -23,6 +23,7 @@ struct AddTransactionView: View {
     @State private var date = Date()
     @State private var isDatePickerPresented = false
     @State private var isCreateCategoryPresented = false
+    @FocusState private var isNoteFocused: Bool
 
     private let categoryGridColumns = Array(repeating: GridItem(.flexible()), count: 4)
     private let keypadColumns = Array(repeating: GridItem(.flexible()), count: 4)
@@ -39,7 +40,7 @@ struct AddTransactionView: View {
 
     private var isValid: Bool {
         guard let amount = Double(amountText) else { return false }
-        return !title.isEmpty && amount > 0 && selectedCategory != nil
+        return amount > 0 && selectedCategory != nil
     }
 
     private var dateLabel: String {
@@ -86,6 +87,10 @@ struct AddTransactionView: View {
             }
         }
         .background(themeColors.background)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isNoteFocused = false
+        }
         .onAppear {
             categories = categoryRepository.fetchAll()
             if let existingTransaction {
@@ -129,7 +134,14 @@ struct AddTransactionView: View {
                 Spacer()
             }
 
-            TextField("Note", text: $title)
+            TextField(
+                "Note",
+                text: $title,
+                prompt: Text("What was this expense for?")
+                    .font(typography.subheadline)
+                    .foregroundStyle(.secondary)
+            )
+                .focused($isNoteFocused)
                 .padding(12)
                 .background(themeColors.surfaceSecondary)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -206,6 +218,7 @@ struct AddTransactionView: View {
     }
 
     private func keypadTapped(_ key: String) {
+        isNoteFocused = false
         switch key {
         case "⌫":
             if amountText.count > 1 {
@@ -270,9 +283,10 @@ struct AddTransactionView: View {
 
     private func save() {
         guard let amount = Double(amountText), let selectedCategory else { return }
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let existingTransaction {
-            existingTransaction.title = title
+            existingTransaction.title = trimmedTitle
             existingTransaction.amount = amount
             existingTransaction.category = selectedCategory.name
             existingTransaction.type = selectedCategory.type
@@ -283,7 +297,7 @@ struct AddTransactionView: View {
         } else {
             let newTransaction = Transaction(
                 id: UUID().uuidString,
-                title: title,
+                title: trimmedTitle,
                 amount: amount,
                 category: selectedCategory.name,
                 type: selectedCategory.type,

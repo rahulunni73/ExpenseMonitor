@@ -40,23 +40,7 @@ extension Theme {
         )
     )
 
-    // ColorHunt palette (#000000 / #233D4D / #FE7F2D / #EAECF0) — same appearance in
-    // both light and dark, per request, for testing how a fixed (non-adaptive) theme reads.
-    static let special = Theme(
-        id: "special",
-        name: "Special",
-        colors: ThemeColors(
-            accent: Color(light: UIColor(hex: 0xFE7F2D), dark: UIColor(hex: 0xFE7F2D)),
-            income: Color(.systemGreen),
-            expense: Color(.systemRed),
-            background: Color(light: UIColor(hex: 0x000000), dark: UIColor(hex: 0x000000)),
-            backgroundTop: Color(light: UIColor(hex: 0x000000), dark: UIColor(hex: 0x000000)),
-            surface: Color(light: UIColor(hex: 0x233D4D), dark: UIColor(hex: 0x233D4D)),
-            surfaceSecondary: Color(light: UIColor(hex: 0xEAECF0), dark: UIColor(hex: 0xEAECF0))
-        )
-    )
-
-    static let allPresets: [Theme] = [.midnight, .noir, .special]
+    static let allPresets: [Theme] = [.midnight, .noir]
 
     static let `default` = Theme.midnight
 }

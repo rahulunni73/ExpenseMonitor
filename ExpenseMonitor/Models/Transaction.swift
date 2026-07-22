@@ -45,3 +45,11 @@ final class Transaction:Identifiable {
     }
 
 }
+
+extension Transaction {
+    /// Falls back to the category name when no note was entered, so rows/detail
+    /// never show a blank headline for a transaction that only has a category.
+    var displayTitle: String {
+        title.isEmpty ? category : title
+    }
+}

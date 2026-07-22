@@ -15,6 +15,14 @@ class ChitFundViewModel {
         loadChitFunds()
     }
 
+    var activeChitFunds: [ChitFund] {
+        chitFunds.filter { !$0.isCompleted }
+    }
+
+    var completedChitFunds: [ChitFund] {
+        chitFunds.filter(\.isCompleted).sorted { $0.endDate > $1.endDate }
+    }
+
     func loadChitFunds() {
         chitFunds = repository.fetchAll()
     }

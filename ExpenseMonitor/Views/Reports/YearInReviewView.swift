@@ -60,7 +60,7 @@ struct YearInReviewView: View {
                             icon: "flame.fill",
                             iconColor: themeColors.expense,
                             title: "Biggest Single Transaction",
-                            value: biggestExpense.title,
+                            value: biggestExpense.displayTitle,
                             detail: biggestExpense.amount.currencyFormatted
                         )
                     }

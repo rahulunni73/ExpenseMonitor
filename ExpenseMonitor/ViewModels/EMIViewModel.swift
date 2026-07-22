@@ -15,6 +15,14 @@ class EMIViewModel {
         loadLoans()
     }
 
+    var activeLoans: [Loan] {
+        loans.filter { !$0.isCompleted }
+    }
+
+    var completedLoans: [Loan] {
+        loans.filter(\.isCompleted).sorted { $0.endDate > $1.endDate }
+    }
+
     func loadLoans() {
         loans = repository.fetchAll()
     }

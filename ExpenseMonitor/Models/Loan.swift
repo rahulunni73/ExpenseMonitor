@@ -79,6 +79,10 @@ extension Loan {
         installments.first { $0.status != .paid }
     }
 
+    var isCompleted: Bool {
+        nextDueInstallment == nil
+    }
+
     var totalPayable: Double {
         installmentAmount * Double(numberOfInstallments)
     }

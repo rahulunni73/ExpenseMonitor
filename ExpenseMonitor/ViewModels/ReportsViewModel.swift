@@ -159,6 +159,10 @@ class ReportsViewModel {
         return (totalDueThisMonth / currentMonthIncome) * 100
     }
 
+    var hasEMIChitHistory: Bool {
+        transactions.contains { $0.linkedLoanID != nil || $0.linkedChitFundID != nil }
+    }
+
     // MARK: Year in Review — only meaningful when browsing a full calendar year with real data.
 
     var yearInReview: YearInReview? {

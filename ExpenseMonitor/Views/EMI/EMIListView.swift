@@ -28,6 +28,7 @@ struct EMIListView: View {
     @State private var segment: EMISegment = .loans
     @State private var isAddLoanPresented = false
     @State private var isAddChitFundPresented = false
+    @State private var isCompletedPresented = false
     @State private var loanForDetail: Loan?
     @State private var chitFundForDetail: ChitFund?
     @Namespace private var glassNamespace
@@ -49,6 +50,14 @@ struct EMIListView: View {
                 Text("EMI")
                     .font(typography.title2Bold)
                 Spacer()
+                Button {
+                    isCompletedPresented = true
+                } label: {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: 20))
+                        .foregroundStyle(themeColors.accent)
+                        .frame(width: 44, height: 44)
+                }
                 Button {
                     if segment == .loans {
                         isAddLoanPresented = true
@@ -104,6 +113,13 @@ struct EMIListView: View {
         .fullScreenCover(item: $chitFundForDetail, onDismiss: { chitFundViewModel.loadChitFunds(); rescheduleReminders() }) { chitFund in
             ChitFundDetailView(chitFund: chitFund, onChange: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
         }
+        .fullScreenCover(isPresented: $isCompletedPresented) {
+            if segment == .loans {
+                CompletedLoansView(loans: viewModel.completedLoans, onChange: { viewModel.loadLoans(); rescheduleReminders() })
+            } else {
+                CompletedChitFundsView(chitFunds: chitFundViewModel.completedChitFunds, onChange: { chitFundViewModel.loadChitFunds(); rescheduleReminders() })
+            }
+        }
     }
 
     private func segmentButton(_ option: EMISegment) -> some View {
@@ -139,10 +155,12 @@ struct EMIListView: View {
         Group {
             if viewModel.loans.isEmpty {
                 emptyStateView(icon: "creditcard", title: "No loans tracked yet", message: "Tap the + button to add a loan or credit card EMI.")
+            } else if viewModel.activeLoans.isEmpty {
+                emptyStateView(icon: "checkmark.circle", title: "All loans paid off", message: "Check the clock icon above for your completed loans.")
             } else {
                 ScrollView {
                     VStack(spacing: 12) {
-                        ForEach(viewModel.loans) { loan in
+                        ForEach(viewModel.activeLoans) { loan in
                             loanCard(loan) {
                                 loanForDetail = loan
                             }
@@ -158,10 +176,12 @@ struct EMIListView: View {
         Group {
             if chitFundViewModel.chitFunds.isEmpty {
                 emptyStateView(icon: "person.3", title: "No chit funds tracked yet", message: "Tap the + button to add a chit fund you're contributing to.")
+            } else if chitFundViewModel.activeChitFunds.isEmpty {
+                emptyStateView(icon: "checkmark.circle", title: "All chit funds completed", message: "Check the clock icon above for your completed chit funds.")
             } else {
                 ScrollView {
                     VStack(spacing: 12) {
-                        ForEach(chitFundViewModel.chitFunds) { chitFund in
+                        ForEach(chitFundViewModel.activeChitFunds) { chitFund in
                             chitFundCard(chitFund) {
                                 chitFundForDetail = chitFund
                             }

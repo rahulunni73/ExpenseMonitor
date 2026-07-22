@@ -64,6 +64,10 @@ extension ChitFund {
         contributions.first { $0.status != .paid }
     }
 
+    var isCompleted: Bool {
+        nextDueContribution == nil
+    }
+
     var hasReceivedPayout: Bool {
         payoutMonth != nil
     }

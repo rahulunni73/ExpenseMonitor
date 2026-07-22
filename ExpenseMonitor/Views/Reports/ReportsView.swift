@@ -15,6 +15,7 @@ struct ReportsView: View {
     @State private var viewModel: ReportsViewModel
     @State private var drillDown: TransactionDrillDown?
     @State private var yearInReviewToShow: YearInReview?
+    @State private var isEMIChitHistoryPresented = false
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.themeColors) private var themeColors
@@ -89,6 +90,10 @@ struct ReportsView: View {
                     if let burden = viewModel.burdenPercent {
                         BurdenRatioCard(percent: burden)
                     }
+
+                    if viewModel.hasEMIChitHistory {
+                        emiChitHistoryTeaser
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.top, 12)
@@ -109,6 +114,51 @@ struct ReportsView: View {
         .sheet(item: $yearInReviewToShow) { review in
             YearInReviewView(review: review)
         }
+        .sheet(isPresented: $isEMIChitHistoryPresented) {
+            EMIChitHistoryView(
+                transactionRepository: transactionRepository,
+                loanRepository: loanRepository,
+                chitFundRepository: chitFundRepository
+            )
+        }
+    }
+
+    private var emiChitHistoryTeaser: some View {
+        Button {
+            isEMIChitHistoryPresented = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "calendar.badge.clock")
+                    .font(.system(size: 20))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(themeColors.accent)
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("EMI & Chit History")
+                        .font(typography.subheadlineBold)
+                        .foregroundStyle(.primary)
+                    Text("See totals paid by month and year")
+                        .font(typography.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(themeColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private func yearInReviewTeaser(_ review: YearInReview) -> some View {
